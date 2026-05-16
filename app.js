@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 
 const UserRoute = require("./routes/User");
-const UserBlogsRoute = require("./routes/Blog");
+const UserBlogsRoute = require("./models/Blog");
 const Blog = require("./models/Blog");
 const cookieParser = require("cookie-parser");
 const { checkForAuthenticationCookie } = require("./middlewares/authentication");
