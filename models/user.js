@@ -4,20 +4,38 @@ const { createHmac, randomBytes } = require("crypto");
 const { creatTokenForUser } = require("../services/authentication");
 
 const UserSchema = new Schema({
-    fullName: { type: String },
-    email: { type: String, required: true, unique: true },
+    fullName: { type: String, required: true },
+    email: { 
+        type: String, 
+        required: true, 
+        unique: true, 
+        lowercase: true, 
+        trim: true 
+    },
     salt: { type: String },
     password: { type: String },
-    profileImageURL: { type: String, default: "https://res.cloudinary.com/dheausxnx/image/upload/v1/blogifyer_uploads/default_profile.png" },
-    role: { type: String, enum: ["USER", "ADMIN"], default: "USER" },
+    profileImageURL: { 
+        type: String, 
+        default: "https://res.cloudinary.com/dheausxnx/image/upload/v1/blogifyer_uploads/default_profile.png" 
+    },
+    role: { 
+        type: String, 
+        enum: ["USER", "ADMIN"], 
+        default: "USER" 
+    },
+
+    // Email Verification
     isVerified: { type: Boolean, default: false },
-    otp: { type: String }, // OTP for signup verification
-    otpExpiry: { type: Date }, // OTP expiry time
-    resetToken: { type: String }, // Token for password reset
-    resetTokenExpiry: { type: Date }, // Reset token expiry
+    otp: { type: String },
+    otpExpiry: { type: Date },
+
+    // Password Reset
+    resetToken: { type: String },
+    resetTokenExpiry: { type: Date },
+
 }, { timestamps: true });
 
-// FIXED: Removed 'next' parameter because the function is async
+// Hash Password before saving
 UserSchema.pre("save", async function () {
     const user = this;
     if (!user.isModified("password")) return;
@@ -31,13 +49,22 @@ UserSchema.pre("save", async function () {
     user.password = hashedPassword;
 });
 
-UserSchema.static('matchPassword', async function(email, password) {
+// Generate Reset Token (2 minutes expiry)
+UserSchema.methods.generateResetToken = function () {
+    const resetToken = randomBytes(32).toString("hex");
+    this.resetToken = resetToken;
+    this.resetTokenExpiry = Date.now() + 2 * 60 * 1000; // 2 minutes
+    return resetToken;
+};
+
+// Match Password for Login
+UserSchema.static('matchPassword', async function (email, password) {
     const user = await this.findOne({ email });
     if (!user) throw new Error("User not found!");
     if (!user.isVerified) throw new Error("Please verify your email first!");
 
     const userProvidedHash = createHmac("sha256", user.salt)
-        .update(password) 
+        .update(password)
         .digest("hex");
 
     if (user.password !== userProvidedHash) throw new Error("Incorrect Password");
