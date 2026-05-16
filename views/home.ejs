@@ -78,7 +78,12 @@
                                     <div>
                                         <div class="d-flex align-items-center mb-3">
                                             <% if (blog.createdBy) { %>
-                                                <img src="<%= blog.createdBy.profileImageURL %>" class="avatar-sm me-2 shadow-sm">
+                                                <img 
+                                                    src="<%= blog.createdBy.profileImageURL %>" 
+                                                    class="avatar-sm me-2 shadow-sm"
+                                                    alt="<%= blog.createdBy.fullName %>"
+                                                    onerror="this.src='/imgs/default.png';"
+                                                >
                                                 <span class="fw-semibold text-light me-2"><%= blog.createdBy.fullName %></span>
                                             <% } else { %>
                                                 <span class="fw-semibold text-light me-2">Anonymous Writer</span>

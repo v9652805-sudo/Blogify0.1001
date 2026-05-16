@@ -25,7 +25,15 @@
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               <!-- Logged in Profile image and username layout display -->
-              <img src="<%= locals.user.profileImageURL %>" alt="Profile" width="32" height="32" class="rounded-circle border border-light" style="object-fit: cover;">
+              <img 
+                src="<%= locals.user.profileImageURL %>" 
+                alt="<%= locals.user.fullName %>" 
+                width="32" 
+                height="32" 
+                class="rounded-circle border border-light" 
+                style="object-fit: cover;"
+                onerror="this.src='/imgs/default.png';"
+              >
               <span><%= locals.user.fullName %></span>
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
