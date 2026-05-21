@@ -7,16 +7,16 @@ const UserSchema = new Schema({
     fullName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     salt: { type: String },
-    password: { type: String },           // Optional for Google users
+    password: { type: String },
     googleId: { type: String, unique: true, sparse: true },
     profileImageURL: { type: String, default: "/imgs/default.png" },
     role: { type: String, enum: ["USER", "ADMIN"], default: "USER" },
 }, { timestamps: true });
 
-// ====================== PASSWORD HASHING MIDDLEWARE ======================
+// ====================== PRE SAVE MIDDLEWARE (Password Hashing) ======================
 UserSchema.pre("save", function (next) {
-    // Skip if password is not modified or if it's a Google user
-    if (!this.isModified("password") || !this.password || this.googleId) {
+    // Skip hashing if password is not present or not modified (Google users)
+    if (!this.password || !this.isModified("password") || this.googleId) {
         return next();
     }
 
@@ -28,15 +28,16 @@ UserSchema.pre("save", function (next) {
 
         this.salt = salt;
         this.password = hashedPassword;
-        next();
+
+        return next();
     } catch (error) {
         console.error("Password Hashing Error:", error);
-        next(error);   // Pass error to next()
+        return next(error);
     }
 });
 
 // ====================== STATIC METHODS ======================
-UserSchema.static('matchPassword', async function (email, password) {
+UserSchema.static("matchPassword", async function (email, password) {
     const user = await this.findOne({ email });
     if (!user) throw new Error("User not found");
     if (!user.password) throw new Error("This account uses Google Sign-In");
@@ -50,16 +51,16 @@ UserSchema.static('matchPassword', async function (email, password) {
     return creatTokenForUser(user);
 });
 
-UserSchema.static('findOrCreateGoogleUser', async function (profile) {
+UserSchema.static("findOrCreateGoogleUser", async function (profile) {
     let user = await this.findOne({ googleId: profile.id });
 
     if (!user) {
         user = await this.findOne({ email: profile.emails[0].value });
 
         if (user) {
-            // Link Google to existing account
+            // Link existing account with Google
             user.googleId = profile.id;
-            if (profile.photos && profile.photos[0]) {
+            if (profile.photos?.[0]?.value) {
                 user.profileImageURL = profile.photos[0].value;
             }
             await user.save();
