@@ -11,7 +11,7 @@ const { checkForAuthenticationCookie } = require("./middlewares/authentication")
 const app = express();
 const PORT = process.env.PORT || 8000;
 
-// Load dotenv only in development
+// Load dotenv in development only
 if (process.env.NODE_ENV !== "production") {
     require("dotenv").config();
 }
@@ -20,16 +20,15 @@ if (process.env.NODE_ENV !== "production") {
 const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
-    console.error("❌ MONGODB_URI is missing!");
+    console.error("❌ MONGODB_URI is missing in Environment Variables!");
 } else {
-    console.log("🔗 Connecting to MongoDB Atlas...");
+    console.log("🔗 Trying to connect to MongoDB Atlas...");
     mongoose.connect(MONGODB_URI, {
         serverSelectionTimeoutMS: 30000,
         socketTimeoutMS: 60000,
-        family: 4
     })
     .then(() => console.log("✅ MongoDB Connected Successfully"))
-    .catch((err) => console.error("❌ MongoDB Error:", err.message));
+    .catch((err) => console.error("❌ MongoDB Connection Error:", err.message));
 }
 
 // ====================== Middleware ======================
