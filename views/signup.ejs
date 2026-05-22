@@ -76,6 +76,7 @@
             font-weight: 600;
             cursor: pointer;
             margin-top: 10px;
+            transition: background 0.3s;
         }
 
         button[type="submit"]:hover {
@@ -102,6 +103,7 @@
             gap: 10px;
             margin-top: 15px;
             text-decoration: none;
+            transition: all 0.3s;
         }
 
         .google-btn:hover {
@@ -129,9 +131,9 @@
         .divider span {
             background: white;
             padding: 0 15px;
+            position: relative;
         }
 
-        /* Banner styling blocks */
         .alert {
             padding: 12px;
             border-radius: 8px;
@@ -151,12 +153,13 @@
             background: #fee2e2;
         }
 
-        /* Modal Overlays Layout setup */
         .modal-overlay {
             display: none;
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(5px);
             z-index: 1000;
@@ -176,6 +179,7 @@
             width: 100%;
             max-width: 400px;
             text-align: center;
+            position: relative;
         }
 
         .btn-close {
@@ -187,11 +191,28 @@
             border: none;
             cursor: pointer;
             color: #6b7280;
+            line-height: 1;
         }
 
-        .modal-icon { font-size: 48px; margin-bottom: 12px; }
-        .modal h3 { color: #1a1a1a; margin-bottom: 8px; }
-        .modal p { color: #6b7280; margin-bottom: 24px; }
+        .btn-close:hover {
+            color: #1f2937;
+        }
+
+        .modal-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .modal h3 {
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            font-size: 22px;
+        }
+
+        .modal p {
+            color: #6b7280;
+            margin-bottom: 24px;
+        }
 
         .otp-inputs {
             display: flex;
@@ -208,6 +229,7 @@
             font-weight: bold;
             border: 2px solid #e5e7eb;
             border-radius: 10px;
+            transition: all 0.3s;
         }
 
         .otp-digit:focus {
@@ -227,10 +249,16 @@
             font-weight: 600;
             cursor: pointer;
             margin-bottom: 12px;
+            transition: background 0.3s;
         }
 
         .btn-verify:hover {
             background: #5568d3;
+        }
+
+        .btn-verify:disabled {
+            background: #a5b4fc;
+            cursor: not-allowed;
         }
 
         .btn-resend {
@@ -239,6 +267,12 @@
             color: #667eea;
             font-size: 15px;
             cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .btn-resend:hover:not(:disabled) {
+            color: #5568d3;
+            text-decoration: underline;
         }
 
         .btn-resend:disabled {
@@ -246,8 +280,41 @@
             cursor: not-allowed;
         }
 
-        .timer { color: #9ca3af; font-size: 14px; margin-top: 8px; }
-        .error-message { color: #ef4444; margin: 12px 0; min-height: 20px; font-weight: 500; }
+        .timer {
+            color: #9ca3af;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        .error-message {
+            color: #ef4444;
+            margin: 12px 0;
+            min-height: 20px;
+            font-weight: 500;
+        }
+
+        .success-message {
+            color: #10b981;
+            margin: 12px 0;
+            min-height: 20px;
+            font-weight: 500;
+        }
+
+        .signin-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #6b7280;
+        }
+
+        .signin-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .signin-link a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -268,11 +335,11 @@
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" required placeholder="Create password">
+                <input type="password" id="password" name="password" required placeholder="Create password" minlength="6">
             </div>
             <div class="form-group">
                 <label for="confirmPassword">Confirm Password</label>
-                <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Confirm password">
+                <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Confirm password" minlength="6">
             </div>
             <button type="submit" id="signupSubmitBtn">Sign Up</button>
         </form>
@@ -284,29 +351,34 @@
                  alt="Google" width="20" height="20">
             Continue with Google
         </a>
+
+        <div class="signin-link">
+            Already have an account? <a href="/user/signin">Sign In</a>
+        </div>
     </div>
 
-    <!-- OTP Modal Layout Block -->
+    <!-- OTP Modal -->
     <div class="modal-overlay" id="otpModal">
-        <div class="modal" style="position: relative;">
-            <button class="btn-close" onclick="closeModal()">×</button>
+        <div class="modal">
+            <button class="btn-close" onclick="closeModal()">&times;</button>
             
-            <div class="modal-icon">🔐</div>
+            <div class="modal-icon">&#128274;</div>
             <h3>Verify Your Email</h3>
-            <p>We've sent a 6-digit code to <strong id="displayEmail"></strong></p>
+            <p>We have sent a 6-digit code to <strong id="displayEmail"></strong></p>
             
             <div class="otp-inputs">
-                <input type="text" maxlength="1" class="otp-digit" data-index="0">
-                <input type="text" maxlength="1" class="otp-digit" data-index="1">
-                <input type="text" maxlength="1" class="otp-digit" data-index="2">
-                <input type="text" maxlength="1" class="otp-digit" data-index="3">
-                <input type="text" maxlength="1" class="otp-digit" data-index="4">
-                <input type="text" maxlength="1" class="otp-digit" data-index="5">
+                <input type="text" maxlength="1" class="otp-digit" data-index="0" inputmode="numeric">
+                <input type="text" maxlength="1" class="otp-digit" data-index="1" inputmode="numeric">
+                <input type="text" maxlength="1" class="otp-digit" data-index="2" inputmode="numeric">
+                <input type="text" maxlength="1" class="otp-digit" data-index="3" inputmode="numeric">
+                <input type="text" maxlength="1" class="otp-digit" data-index="4" inputmode="numeric">
+                <input type="text" maxlength="1" class="otp-digit" data-index="5" inputmode="numeric">
             </div>
             
             <div class="error-message" id="otpError"></div>
+            <div class="success-message" id="otpSuccess"></div>
             
-            <button class="btn-verify" onclick="verifyOTP()">Verify OTP</button>
+            <button class="btn-verify" id="verifyBtn" onclick="verifyOTP()">Verify OTP</button>
             <button class="btn-resend" id="resendBtn" onclick="resendOTP()" disabled>Resend Code</button>
             <div class="timer" id="timer"></div>
         </div>
@@ -321,37 +393,59 @@
         const displayEmail = document.getElementById('displayEmail');
         const otpInputs = document.querySelectorAll('.otp-digit');
         const otpError = document.getElementById('otpError');
+        const otpSuccess = document.getElementById('otpSuccess');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const resendBtn = document.getElementById('resendBtn');
         
         let currentEmail = "";
+        let currentUserData = {};
         let countdown = 300;
         let timerInterval;
 
+        // Show alert message
         function showAlert(message, type = 'error') {
             statusAlert.textContent = message;
-            statusAlert.className = `alert alert-${type}`;
+            statusAlert.className = 'alert alert-' + type;
             statusAlert.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(hideAlert, 5000);
+            }
         }
 
+        // Hide alert message
         function hideAlert() {
             statusAlert.style.display = 'none';
         }
 
-        // ==========================================
-        // 1. AJAX REGISTER FORM SUBMISSION
-        // ==========================================
+        // Form submission handler
         signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             hideAlert();
 
-            const fullName = document.getElementById('fullName').value;
-            const email = document.getElementById('email').value;
+            const fullName = document.getElementById('fullName').value.trim();
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
+
+            // Client-side validation
+            if (!fullName || !email || !password || !confirmPassword) {
+                showAlert("All fields are required.");
+                return;
+            }
+
+            if (password.length < 6) {
+                showAlert("Password must be at least 6 characters.");
+                return;
+            }
 
             if (password !== confirmPassword) {
                 showAlert("Passwords do not match.");
                 return;
             }
+
+            // Store user data for resend functionality
+            currentUserData = { fullName, email, password, confirmPassword };
 
             signupSubmitBtn.disabled = true;
             signupSubmitBtn.textContent = "Sending OTP...";
@@ -369,47 +463,61 @@
                     currentEmail = email.toLowerCase();
                     displayEmail.textContent = currentEmail;
                     
-                    // Flush existing input characters
+                    // Clear OTP inputs
                     otpInputs.forEach(input => input.value = '');
                     otpError.textContent = '';
+                    otpSuccess.textContent = '';
                     
+                    // Show modal and start timer
                     modal.classList.add('active');
                     otpInputs[0].focus();
                     startTimer();
+                    
+                    showAlert("OTP sent to your email!", "success");
                 } else {
-                    showAlert(data.message || "An authentication fault occurred.");
+                    showAlert(data.message || "Failed to send OTP. Please try again.");
                 }
 
             } catch (err) {
-                console.error("Client Submission Catch:", err);
-                showAlert("Unable to access registration portal. Ensure server runtime is live.");
+                console.error("Signup Error:", err);
+                showAlert("Network error. Please check your connection and try again.");
             } finally {
                 signupSubmitBtn.disabled = false;
                 signupSubmitBtn.textContent = "Sign Up";
             }
         });
 
-        // ==========================================
-        // 2. 6-BOX NAVIGATION UTILITIES
-        // ==========================================
+        // OTP input navigation
         otpInputs.forEach((input, index) => {
-            input.addEventListener('input', () => {
-                input.value = input.value.replace(/[^0-9]/g, ''); // Clear formatting characters
+            // Only allow numbers
+            input.addEventListener('input', (e) => {
+                input.value = input.value.replace(/[^0-9]/g, '');
+                
                 if (input.value.length === 1 && index < 5) {
                     otpInputs[index + 1].focus();
                 }
+                
+                // Clear error when typing
+                otpError.textContent = '';
             });
 
+            // Handle backspace
             input.addEventListener('keydown', (e) => {
                 if (e.key === "Backspace" && input.value === "" && index > 0) {
                     otpInputs[index - 1].focus();
                 }
+                
+                // Allow Enter to verify
+                if (e.key === "Enter") {
+                    verifyOTP();
+                }
             });
 
-            // Clipboard Paste interception mapping
+            // Handle paste
             input.addEventListener('paste', (e) => {
                 e.preventDefault();
                 const pastedContent = e.clipboardData.getData('text').trim();
+                
                 if (/^\d{6}$/.test(pastedContent)) {
                     otpInputs.forEach((inp, idx) => {
                         inp.value = pastedContent[idx];
@@ -417,41 +525,47 @@
                     otpInputs[5].focus();
                 }
             });
+
+            // Select all on focus
+            input.addEventListener('focus', () => {
+                input.select();
+            });
         });
 
-        // ==========================================
-        // 3. COUNTDOWN TIMER CONTEXT
-        // ==========================================
+        // Start countdown timer
         function startTimer() {
             clearInterval(timerInterval);
-            countdown = 300;
-            document.getElementById('resendBtn').disabled = true;
+            countdown = 300; // 5 minutes
+            resendBtn.disabled = true;
 
             timerInterval = setInterval(() => {
                 const min = Math.floor(countdown / 60);
                 const sec = countdown % 60;
-                document.getElementById('timer').textContent = `Expires in ${min}:${sec < 10 ? '0' : ''}${sec}`;
+                document.getElementById('timer').textContent = 'Code expires in ' + min + ':' + (sec < 10 ? '0' : '') + sec;
                 countdown--;
 
                 if (countdown < 0) {
                     clearInterval(timerInterval);
-                    document.getElementById('resendBtn').disabled = false;
-                    document.getElementById('timer').textContent = 'Code expired.';
+                    resendBtn.disabled = false;
+                    document.getElementById('timer').textContent = 'Code expired. Click resend to get a new code.';
                 }
             }, 1000);
         }
 
-        // ==========================================
-        // 4. VERIFY REGISTRATION ENDPOINT HANDLER
-        // ==========================================
+        // Verify OTP
         async function verifyOTP() {
             otpError.textContent = "";
+            otpSuccess.textContent = "";
+            
             const otp = Array.from(otpInputs).map(i => i.value).join('');
             
             if (otp.length !== 6) {
-                otpError.textContent = "Please provide your entire 6-digit token code.";
+                otpError.textContent = "Please enter the complete 6-digit code.";
                 return;
             }
+
+            verifyBtn.disabled = true;
+            verifyBtn.textContent = "Verifying...";
 
             try {
                 const res = await fetch('/user/verify-otp', {
@@ -463,26 +577,86 @@
                 const data = await res.json();
 
                 if (res.ok && data.success) {
-                    closeModal();
-                    alert("✅ Registration Verified! Welcoming you back inside your profile.");
-                    window.location.href = "/";
+                    otpSuccess.textContent = "Verification successful! Redirecting...";
+                    clearInterval(timerInterval);
+                    
+                    setTimeout(() => {
+                        window.location.href = "/";
+                    }, 1500);
                 } else {
-                    otpError.textContent = data.message || "Invalid or incorrect OTP key string.";
+                    otpError.textContent = data.message || "Invalid OTP. Please try again.";
+                    
+                    // Clear inputs on error
+                    otpInputs.forEach(input => input.value = '');
+                    otpInputs[0].focus();
                 }
             } catch (err) {
-                otpError.textContent = "Network communication disruption occurred.";
+                console.error("Verify OTP Error:", err);
+                otpError.textContent = "Network error. Please try again.";
+            } finally {
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = "Verify OTP";
             }
         }
 
+        // Close modal
         function closeModal() {
             modal.classList.remove('active');
             clearInterval(timerInterval);
         }
 
-        function resendOTP() {
-            closeModal();
-            signupForm.dispatchEvent(new Event('submit'));
+        // Resend OTP
+        async function resendOTP() {
+            if (!currentUserData.email) {
+                closeModal();
+                return;
+            }
+
+            resendBtn.disabled = true;
+            resendBtn.textContent = "Sending...";
+            otpError.textContent = "";
+            otpSuccess.textContent = "";
+
+            try {
+                const res = await fetch('/user/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(currentUserData)
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    otpSuccess.textContent = "New OTP sent successfully!";
+                    otpInputs.forEach(input => input.value = '');
+                    otpInputs[0].focus();
+                    startTimer();
+                } else {
+                    otpError.textContent = data.message || "Failed to resend OTP.";
+                    resendBtn.disabled = false;
+                }
+            } catch (err) {
+                console.error("Resend OTP Error:", err);
+                otpError.textContent = "Network error. Please try again.";
+                resendBtn.disabled = false;
+            } finally {
+                resendBtn.textContent = "Resend Code";
+            }
         }
+
+        // Close modal on outside click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('active')) {
+                closeModal();
+            }
+        });
     </script>
 </body>
 </html>
