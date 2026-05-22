@@ -1,36 +1,14 @@
-const { validateToken } = require("../services/authentication");
+const { checkForAuthenticationCookie } = require("./checkAuth"); // Adjust if your file structure is different
 
-function checkForAuthenticationCookie(cookieName) {
-    return (req, res, next) => {
-        const tokenCookieValue = req.cookies[cookieName];
+// Restrict to Logged-in Users Only
+const restrictToLoggedInUserOnly = (req, res, next) => {
+    if (!req.user) {
+        return res.redirect("/user/signin");
+    }
+    next();
+};
 
-        // No token = guest user
-        if (!tokenCookieValue) {
-            req.user = null;
-            return next();
-        }
-
-        try {
-            const userPayload = validateToken(tokenCookieValue);
-
-            if (userPayload) {
-                req.user = userPayload;
-            } else {
-                req.user = null;
-                // Optional: Clear invalid cookie
-                // res.clearCookie(cookieName);
-            }
-        } catch (error) {
-            console.error("Token validation failed:", error.message);
-            req.user = null;
-            // res.clearCookie(cookieName);   // Uncomment if you want to clear bad tokens
-        }
-
-        next();
-    };
-}
-
-// Add this function
+// Restrict to Specific Roles (Admin)
 const restrictTo = (roles = []) => {
     return (req, res, next) => {
         if (!req.user) {
@@ -43,4 +21,8 @@ const restrictTo = (roles = []) => {
     };
 };
 
-module.exports = { checkForAuthenticationCookie, restrictTo };
+module.exports = { 
+    checkForAuthenticationCookie, 
+    restrictTo, 
+    restrictToLoggedInUserOnly 
+};
