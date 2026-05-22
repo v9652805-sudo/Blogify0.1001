@@ -1,60 +1,44 @@
 // services/email.js
-const nodemailer = require("nodemailer");
-require("dotenv").config();
+const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
-    service: "gmail",
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
+    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD
-    },
-    tls: {
-        rejectUnauthorized: false
-    }
-});
-
-// Test connection on startup
-transporter.verify((error) => {
-    if (error) {
-        console.error("❌ Email Transporter Failed:", error.message);
-    } else {
-        console.log("✅ Email Transporter Ready");
     }
 });
 
 const sendOTP = async (email, otp) => {
-    const mailOptions = {
-        from: `"Blogify" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: "Your OTP Code - Blogify",
-        html: `
-            <div style="font-family: Arial, sans-serif; background:#f4f4f4; padding:20px;">
-                <div style="max-width:500px; margin:0 auto; background:white; padding:30px; border-radius:10px;">
-                    <h2 style="text-align:center; color:#333;">Your OTP Code</h2>
-                    <div style="background:#667eea; color:white; font-size:32px; font-weight:bold; 
-                                padding:20px; text-align:center; border-radius:8px; margin:20px 0; letter-spacing:4px;">
-                        ${otp}
-                    </div>
-                    <p style="text-align:center; color:#666;">This OTP will expire in 5 minutes.</p>
-                    <p style="text-align:center; color:#999; font-size:12px;">
+    try {
+        const mailOptions = {
+            from: `"Blogify" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'Your Blogify Signup OTP Code',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 30px; border: 1px solid #ddd; border-radius: 12px; background-color: #f9f9f9;">
+                    <h2 style="color: #667eea; text-align: center;">Verify Your Email Address</h2>
+                    <p style="font-size: 16px; text-align: center;">Use the following OTP to complete your signup:</p>
+                    <h1 style="color: #667eea; letter-spacing: 12px; font-size: 48px; text-align: center; margin: 20px 0;">${otp}</h1>
+                    <p style="text-align: center; color: #666;">
+                        This code will expire in <strong>5 minutes</strong>.
+                    </p>
+                    <p style="text-align: center; color: #999; font-size: 14px;">
                         If you didn't request this code, please ignore this email.
                     </p>
                 </div>
-            </div>
-        `
-    };
+            `
+        };
 
-    try {
         const info = await transporter.sendMail(mailOptions);
-        console.log(`✅ OTP Sent to ${email} | ID: ${info.messageId}`);
+        console.log(`✅ OTP sent successfully to ${email} | Message ID: ${info.messageId}`);
         return true;
+
     } catch (error) {
-        console.error("❌ Failed to Send OTP:");
-        console.error("Code:", error.code);
-        console.error("Message:", error.message);
+        console.error("❌ Failed to send OTP email:", error.message);
         return false;
     }
 };
