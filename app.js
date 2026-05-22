@@ -6,6 +6,8 @@ const passport = require("passport");
 
 const UserRoute = require("./routes/User");
 const BlogRoute = require("./routes/Blog");
+const AdminRoute = require("./routes/Admin");
+const ProfileRoute = require("./routes/Profile");   // ← New
 
 const { checkForAuthenticationCookie } = require("./middlewares/authentication");
 
@@ -46,8 +48,6 @@ app.get("/", async (req, res) => {
             .populate("createdBy", "fullName profileImageURL")
             .lean();
 
-        console.log("👤 Home Page - User:", req.user ? req.user.email : "Guest");
-
         res.render("home", { 
             user: req.user || null,
             blogs: allBlogs || [] 
@@ -57,11 +57,10 @@ app.get("/", async (req, res) => {
         res.status(500).send("Internal Server Error");
     }
 });
-const AdminRoute = require("./routes/Admin");
 
-// Admin Routes
+// Routes
 app.use("/admin", AdminRoute);
-
+app.use("/user/profile", ProfileRoute);   // ← New Profile Route
 app.use("/user", UserRoute);
 app.use("/blogs", BlogRoute);
 
