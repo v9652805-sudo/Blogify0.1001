@@ -3,30 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - All Users</title>
+    <title>Admin - All Users & Blogs</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .user-card { transition: all 0.3s; }
-        .user-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .blog-list { max-height: 200px; overflow-y: auto; }
+        .user-card { 
+            transition: all 0.3s; 
+            margin-bottom: 25px;
+        }
+        .user-card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
+        }
+        .profile-img { 
+            width: 60px; 
+            height: 60px; 
+            object-fit: cover; 
+        }
+        .blog-img { 
+            width: 100%; 
+            max-height: 160px; 
+            object-fit: cover; 
+            border-radius: 8px; 
+        }
+        .password-cell { 
+            font-family: monospace; 
+            color: #6c757d; 
+            background: #f8f9fa; 
+            padding: 4px 8px; 
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body class="bg-light">
     <div class="container mt-4">
-        <h1 class="mb-4">👥 All Users & Their Blogs</h1>
-        <p class="text-muted">Total Users: <%= users.length %></p>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>👥 All Users & Their Blogs</h1>
+            <p class="text-muted mb-0">Total Users: <strong><%= users.length %></strong></p>
+        </div>
 
         <% users.forEach(user => { %>
-            <div class="card user-card mb-4">
+            <div class="card user-card">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
+                    <!-- User Header -->
+                    <div class="d-flex justify-content-between align-items-start mb-3">
                         <div class="d-flex align-items-center">
                             <img src="<%= user.profileImageURL %>" 
                                  alt="Profile" 
-                                 class="rounded-circle me-3" 
-                                 width="50" height="50">
+                                 class="rounded-circle profile-img me-3">
                             <div>
-                                <h5><%= user.fullName %></h5>
+                                <h5 class="mb-1"><%= user.fullName %></h5>
                                 <p class="mb-1 text-muted"><%= user.email %></p>
                                 <span class="badge <%= user.role === 'ADMIN' ? 'bg-danger' : 'bg-primary' %>">
                                     <%= user.role %>
@@ -36,28 +61,48 @@
 
                         <button class="btn btn-danger btn-sm delete-btn" 
                                 data-id="<%= user._id %>">
-                            Delete User
+                            🗑 Delete User
                         </button>
                     </div>
 
-                    <hr>
-                    <h6>Blogs Posted (<%= user.blogCount %>)</h6>
-                    <div class="blog-list">
-                        <% if (user.blogs.length === 0) { %>
-                            <p class="text-muted small">No blogs yet.</p>
-                        <% } else { %>
-                            <ul class="list-group">
-                                <% user.blogs.forEach(blog => { %>
-                                    <li class="list-group-item small">
-                                        <%= blog.title %>
-                                        <span class="text-muted float-end">
-                                            <%= new Date(blog.createdAt).toLocaleDateString() %>
-                                        </span>
-                                    </li>
-                                <% }) %>
-                            </ul>
-                        <% } %>
+                    <!-- Password Status -->
+                    <div class="mb-3">
+                        <strong>Password:</strong> 
+                        <span class="password-cell">
+                            <%= user.googleId ? "Google Account (No Password)" : "Hashed (Security Protected)" %>
+                        </span>
                     </div>
+
+                    <hr>
+
+                    <!-- Blogs Section -->
+                    <h6 class="mb-3">📝 Blogs Posted (<%= user.blogs.length %>)</h6>
+                    
+                    <% if (user.blogs.length === 0) { %>
+                        <p class="text-muted">No blogs posted yet.</p>
+                    <% } else { %>
+                        <div class="row">
+                            <% user.blogs.forEach(blog => { %>
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="border p-2 rounded h-100">
+                                        <% if (blog.coverImageURL) { %>
+                                            <img src="<%= blog.coverImageURL %>" 
+                                                 alt="Blog Cover" 
+                                                 class="blog-img mb-2">
+                                        <% } else { %>
+                                            <div class="bg-light text-center py-5 mb-2 rounded">
+                                                <small class="text-muted">No Cover Image</small>
+                                            </div>
+                                        <% } %>
+                                        <h6 class="mb-1 text-truncate"><%= blog.title %></h6>
+                                        <small class="text-muted">
+                                            <%= new Date(blog.createdAt).toLocaleDateString('en-IN') %>
+                                        </small>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        </div>
+                    <% } %>
                 </div>
             </div>
         <% }) %>
@@ -66,21 +111,22 @@
     <script>
         document.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
-                if (!confirm('Are you sure you want to delete this user and ALL their blogs?')) return;
+                if (!confirm('⚠️ Are you sure? This will delete the user and ALL their blogs permanently.')) return;
 
                 const userId = btn.dataset.id;
 
-                const res = await fetch(`/admin/users/${userId}`, {
-                    method: 'DELETE'
-                });
+                try {
+                    const res = await fetch(`/admin/users/${userId}`, { method: 'DELETE' });
+                    const data = await res.json();
 
-                const data = await res.json();
-
-                if (data.success) {
-                    alert(data.message);
-                    location.reload();
-                } else {
-                    alert(data.message);
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert(data.message || "Failed to delete");
+                    }
+                } catch (err) {
+                    alert("Error: " + err.message);
                 }
             });
         });
