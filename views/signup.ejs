@@ -131,13 +131,14 @@
             padding: 0 15px;
         }
 
-        /* Message banners for general alerts */
+        /* Banner styling blocks */
         .alert {
             padding: 12px;
             border-radius: 8px;
             text-align: center;
             margin-bottom: 15px;
             display: none;
+            font-weight: 500;
         }
 
         .alert-success {
@@ -150,7 +151,7 @@
             background: #fee2e2;
         }
 
-        /* Modal Styles */
+        /* Modal Overlays Layout setup */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -254,7 +255,6 @@
     <div class="signup-container">
         <h2>Create Account</h2>
 
-        <!-- Dynamically handled message slots -->
         <div id="statusAlert" class="alert"></div>
 
         <form id="signupForm">
@@ -286,7 +286,7 @@
         </a>
     </div>
 
-    <!-- OTP Modal -->
+    <!-- OTP Modal Layout Block -->
     <div class="modal-overlay" id="otpModal">
         <div class="modal" style="position: relative;">
             <button class="btn-close" onclick="closeModal()">×</button>
@@ -323,10 +323,9 @@
         const otpError = document.getElementById('otpError');
         
         let currentEmail = "";
-        let countdown = 300; // 5 minutes
+        let countdown = 300;
         let timerInterval;
 
-        // Helper to display page alerts
         function showAlert(message, type = 'error') {
             statusAlert.textContent = message;
             statusAlert.className = `alert alert-${type}`;
@@ -338,7 +337,7 @@
         }
 
         // ==========================================
-        // 1. ASYNC SIGNUP SUBMISSION
+        // 1. AJAX REGISTER FORM SUBMISSION
         // ==========================================
         signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -350,7 +349,7 @@
             const confirmPassword = document.getElementById('confirmPassword').value;
 
             if (password !== confirmPassword) {
-                showAlert("Passwords do not match");
+                showAlert("Passwords do not match.");
                 return;
             }
 
@@ -358,41 +357,32 @@
             signupSubmitBtn.textContent = "Sending OTP...";
 
             try {
-                // We point exactly to your route setup
                 const res = await fetch('/user/signup', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ fullName, email, password, confirmPassword })
                 });
 
-                const contentType = res.headers.get("content-type");
-                
-                // If the response is HTML, your route failed validation and re-rendered the full page
-                if (contentType && contentType.includes("text/html")) {
-                    signupSubmitBtn.disabled = false;
-                    signupSubmitBtn.textContent = "Sign Up";
-                    showAlert("Registration error. Check fields or try another email.");
-                    return;
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    currentEmail = email.toLowerCase();
+                    displayEmail.textContent = currentEmail;
+                    
+                    // Flush existing input characters
+                    otpInputs.forEach(input => input.value = '');
+                    otpError.textContent = '';
+                    
+                    modal.classList.add('active');
+                    otpInputs[0].focus();
+                    startTimer();
+                } else {
+                    showAlert(data.message || "An authentication fault occurred.");
                 }
 
-                // If your backend responds with successful validation data
-                currentEmail = email.toLowerCase();
-                displayEmail.textContent = currentEmail;
-                
-                // Reset inputs inside modal
-                otpInputs.forEach(input => input.value = '');
-                otpError.textContent = '';
-                
-                // Display the modal popup cleanly
-                modal.classList.add('active');
-                otpInputs[0].focus();
-                startTimer();
-
             } catch (err) {
-                console.error("Signup Submission Error:", err);
-                showAlert("Something went wrong. Please check your connection.");
+                console.error("Client Submission Catch:", err);
+                showAlert("Unable to access registration portal. Ensure server runtime is live.");
             } finally {
                 signupSubmitBtn.disabled = false;
                 signupSubmitBtn.textContent = "Sign Up";
@@ -400,31 +390,29 @@
         });
 
         // ==========================================
-        // 2. 6-BOX INTERACTION LOGIC
+        // 2. 6-BOX NAVIGATION UTILITIES
         // ==========================================
         otpInputs.forEach((input, index) => {
-            // Numbers typing processing
-            input.addEventListener('input', (e) => {
-                input.value = input.value.replace(/[^0-9]/g, ''); // Numeric filter
+            input.addEventListener('input', () => {
+                input.value = input.value.replace(/[^0-9]/g, ''); // Clear formatting characters
                 if (input.value.length === 1 && index < 5) {
                     otpInputs[index + 1].focus();
                 }
             });
 
-            // Backspace alignment tracking
             input.addEventListener('keydown', (e) => {
                 if (e.key === "Backspace" && input.value === "" && index > 0) {
                     otpInputs[index - 1].focus();
                 }
             });
 
-            // Clean clipboard parsing support for fast copy-pasting
+            // Clipboard Paste interception mapping
             input.addEventListener('paste', (e) => {
                 e.preventDefault();
-                const pasteData = e.clipboardData.getData('text').trim();
-                if (/^\d{6}$/.test(pasteData)) {
+                const pastedContent = e.clipboardData.getData('text').trim();
+                if (/^\d{6}$/.test(pastedContent)) {
                     otpInputs.forEach((inp, idx) => {
-                        inp.value = pasteData[idx];
+                        inp.value = pastedContent[idx];
                     });
                     otpInputs[5].focus();
                 }
@@ -432,11 +420,11 @@
         });
 
         // ==========================================
-        // 3. COUNTDOWN TIMER SYSTEM
+        // 3. COUNTDOWN TIMER CONTEXT
         // ==========================================
         function startTimer() {
             clearInterval(timerInterval);
-            countdown = 300; // 5 mins
+            countdown = 300;
             document.getElementById('resendBtn').disabled = true;
 
             timerInterval = setInterval(() => {
@@ -448,20 +436,20 @@
                 if (countdown < 0) {
                     clearInterval(timerInterval);
                     document.getElementById('resendBtn').disabled = false;
-                    document.getElementById('timer').textContent = 'OTP Expired.';
+                    document.getElementById('timer').textContent = 'Code expired.';
                 }
             }, 1000);
         }
 
         // ==========================================
-        // 4. VERIFY OTP SUBMISSION
+        // 4. VERIFY REGISTRATION ENDPOINT HANDLER
         // ==========================================
         async function verifyOTP() {
             otpError.textContent = "";
             const otp = Array.from(otpInputs).map(i => i.value).join('');
             
             if (otp.length !== 6) {
-                otpError.textContent = "Please enter all 6 digits";
+                otpError.textContent = "Please provide your entire 6-digit token code.";
                 return;
             }
 
@@ -474,15 +462,15 @@
 
                 const data = await res.json();
 
-                if (data.success) {
+                if (res.ok && data.success) {
                     closeModal();
-                    alert("✅ Account created and verified successfully!");
-                    window.location.href = "/"; // Directs to home layout
+                    alert("✅ Registration Verified! Welcoming you back inside your profile.");
+                    window.location.href = "/";
                 } else {
-                    otpError.textContent = data.message || "Invalid OTP";
+                    otpError.textContent = data.message || "Invalid or incorrect OTP key string.";
                 }
             } catch (err) {
-                otpError.textContent = "Verification failed. Check network settings.";
+                otpError.textContent = "Network communication disruption occurred.";
             }
         }
 
@@ -491,8 +479,7 @@
             clearInterval(timerInterval);
         }
 
-        async function resendOTP() {
-            alert("Resending validation code to your email...");
+        function resendOTP() {
             closeModal();
             signupForm.dispatchEvent(new Event('submit'));
         }
