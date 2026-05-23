@@ -1,85 +1,139 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/user');
+const User = require('../models/user');           // Make sure this matches your model file name
 const { sendOTPEmail } = require('../services/email');
 
+// Temporary OTP Storage
 const otpStore = new Map();
 
-// SIGNIN (Untouched)
+// ====================== SIGNIN LOGIC (UNTOUCHED) ======================
 router.post('/signin', async (req, res) => {
     const { email, password } = req.body;
+
     try {
         const token = await User.matchPassword(email, password);
-        res.cookie("token", token, { httpOnly: true, secure: false, sameSite: "strict", maxAge: 7*24*60*60*1000 });
-        res.status(200).json({ success: true, message: "Login successful" });
+
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Login successful"
+        });
     } catch (error) {
-        res.status(401).json({ success: false, message: error.message || "Invalid credentials" });
+        console.error("Signin Error:", error.message);
+        res.status(401).json({
+            success: false,
+            message: error.message || "Invalid email or password"
+        });
     }
 });
 
-// LOGOUT (Untouched)
+// ====================== LOGOUT LOGIC (UNTOUCHED) ======================
 router.get('/logout', (req, res) => {
     res.clearCookie("token");
     res.redirect('/');
 });
 
-// GET SIGNUP PAGE
+router.post('/logout', (req, res) => {
+    res.clearCookie("token");
+    res.status(200).json({ success: true, message: "Logged out successfully" });
+});
+
+// ====================== GET SIGNUP PAGE ======================
 router.get('/signup', (req, res) => {
     res.render('signup');
 });
 
-// SEND OTP
+// ====================== SEND OTP ======================
 router.post('/send-otp', async (req, res) => {
     const { email } = req.body;
-    if (!email) return res.status(400).json({ success: false, message: 'Email is required' });
+
+    if (!email) {
+        return res.status(400).json({ success: false, message: 'Email is required' });
+    }
 
     try {
         const normalizedEmail = email.toLowerCase().trim();
-        if (await User.findOne({ email: normalizedEmail })) {
-            return res.status(409).json({ success: false, message: "Email already registered. Please login instead." });
+
+        // Check if email already exists
+        const existingUser = await User.findOne({ email: normalizedEmail });
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                message: "Email already registered. Please login instead."
+            });
         }
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        otpStore.set(normalizedEmail, { otp, expires: Date.now() + 5*60*1000 });
+        const expires = Date.now() + 5 * 60 * 1000; // 5 minutes
+
+        otpStore.set(normalizedEmail, { otp, expires });
 
         await sendOTPEmail(email, otp);
+
+        console.log(`✅ OTP Sent Successfully to: ${email}`);
+
         res.json({ success: true, message: 'OTP sent successfully' });
     } catch (error) {
-        console.error("Send OTP Error:", error);
+        console.error("❌ Send OTP Failed:", error.message);
         res.status(500).json({ success: false, message: 'Failed to send OTP. Try again.' });
     }
 });
 
-// SIGNUP
+// ====================== SIGNUP ======================
 router.post('/signup', async (req, res) => {
     const { FullName, email, password, otp } = req.body;
+
     if (!FullName || !email || !password || !otp) {
         return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
     try {
         const normalizedEmail = email.toLowerCase().trim();
-        const stored = otpStore.get(normalizedEmail);
 
+        const stored = otpStore.get(normalizedEmail);
         if (!stored || stored.otp !== otp || stored.expires < Date.now()) {
             return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
         }
 
         otpStore.delete(normalizedEmail);
 
-        if (await User.findOne({ email: normalizedEmail })) {
-            return res.status(409).json({ success: false, message: "Email already registered." });
+        const existingUser = await User.findOne({ email: normalizedEmail });
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                message: "Email already registered. Please login."
+            });
         }
 
-        const user = await User.create({ fullName: FullName, email: normalizedEmail, password });
+        const newUser = await User.create({
+            fullName: FullName,
+            email: normalizedEmail,
+            password: password
+        });
 
         const token = await User.matchPassword(normalizedEmail, password);
-        res.cookie("token", token, { httpOnly: true, secure: false, sameSite: "strict", maxAge: 7*24*60*60*1000 });
 
-        res.status(201).json({ success: true, message: "Account created successfully!" });
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        res.status(201).json({
+            success: true,
+            message: "Account created successfully!"
+        });
+
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: "Signup failed" });
+        console.error("Signup Error:", err);
+        res.status(500).json({ success: false, message: "Signup failed. Please try again." });
     }
 });
 
