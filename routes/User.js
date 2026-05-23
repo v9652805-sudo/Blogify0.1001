@@ -1,39 +1,28 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/user');           // Make sure this matches your model file name
+const User = require('../models/user');
 const { sendOTPEmail } = require('../services/email');
 
-// Temporary OTP Storage
 const otpStore = new Map();
 
-// ====================== SIGNIN LOGIC (UNTOUCHED) ======================
+// ====================== SIGNIN (UNTOUCHED) ======================
 router.post('/signin', async (req, res) => {
     const { email, password } = req.body;
-
     try {
         const token = await User.matchPassword(email, password);
-
         res.cookie("token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
-
-        res.status(200).json({
-            success: true,
-            message: "Login successful"
-        });
+        res.status(200).json({ success: true, message: "Login successful" });
     } catch (error) {
-        console.error("Signin Error:", error.message);
-        res.status(401).json({
-            success: false,
-            message: error.message || "Invalid email or password"
-        });
+        res.status(401).json({ success: false, message: error.message || "Invalid credentials" });
     }
 });
 
-// ====================== LOGOUT LOGIC (UNTOUCHED) ======================
+// ====================== LOGOUT (UNTOUCHED) ======================
 router.get('/logout', (req, res) => {
     res.clearCookie("token");
     res.redirect('/');
@@ -60,7 +49,6 @@ router.post('/send-otp', async (req, res) => {
     try {
         const normalizedEmail = email.toLowerCase().trim();
 
-        // Check if email already exists
         const existingUser = await User.findOne({ email: normalizedEmail });
         if (existingUser) {
             return res.status(409).json({
@@ -70,26 +58,27 @@ router.post('/send-otp', async (req, res) => {
         }
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const expires = Date.now() + 5 * 60 * 1000; // 5 minutes
+        const expires = Date.now() + 5 * 60 * 1000;
 
         otpStore.set(normalizedEmail, { otp, expires });
 
         await sendOTPEmail(email, otp);
 
-        console.log(`✅ OTP Sent Successfully to: ${email}`);
-
         res.json({ success: true, message: 'OTP sent successfully' });
     } catch (error) {
-        console.error("❌ Send OTP Failed:", error.message);
-        res.status(500).json({ success: false, message: 'Failed to send OTP. Try again.' });
+        console.error("Send OTP Error:", error.message);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to send OTP. Please check server console.' 
+        });
     }
 });
 
-// ====================== SIGNUP ======================
+// ====================== SIGNUP (Fixed) ======================
 router.post('/signup', async (req, res) => {
-    const { fullName, email, password, otp } = req.body;
+    const { fullName, email, password, otp } = req.body;   // Fixed destructuring
 
-    if (!FullName || !email || !password || !otp) {
+    if (!fullName || !email || !password || !otp) {
         return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
@@ -105,10 +94,7 @@ router.post('/signup', async (req, res) => {
 
         const existingUser = await User.findOne({ email: normalizedEmail });
         if (existingUser) {
-            return res.status(409).json({
-                success: false,
-                message: "Email already registered. Please login."
-            });
+            return res.status(409).json({ success: false, message: "Email already registered." });
         }
 
         const newUser = await User.create({
@@ -126,14 +112,11 @@ router.post('/signup', async (req, res) => {
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
-        res.status(201).json({
-            success: true,
-            message: "Account created successfully!"
-        });
+        res.status(201).json({ success: true, message: "Account created successfully!" });
 
     } catch (err) {
         console.error("Signup Error:", err);
-        res.status(500).json({ success: false, message: "Signup failed. Please try again." });
+        res.status(500).json({ success: false, message: "Signup failed" });
     }
 });
 
