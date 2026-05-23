@@ -20,21 +20,22 @@
 
         .form-control {
             border-radius: 12px;
-            padding: 14px 18px;
+            padding: 14px 16px;
             border: 2px solid #e2e8f0;
             transition: all 0.3s ease;
+            font-size: 1rem;
         }
 
         .form-control:focus {
             border-color: #667eea;
             box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
-            outline: none;
         }
 
+        /* OTP Styling - Larger for mobile touch */
         .otp-box {
-            width: 52px;
+            width: 48px;
             height: 58px;
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             font-weight: 600;
             text-align: center;
             border-radius: 12px;
@@ -72,7 +73,6 @@
         .google-btn:hover {
             border-color: #94a3b8;
             background: #f8fafc;
-            transform: translateY(-1px);
         }
 
         .divider {
@@ -88,25 +88,42 @@
             height: 1px;
             background: #e2e8f0;
         }
-        .divider span {
-            padding: 0 18px;
+
+        /* Mobile Optimizations */
+        @media (max-width: 576px) {
+            .auth-card {
+                margin: 15px;
+                border-radius: 16px;
+            }
+            .otp-box {
+                width: 42px;
+                height: 54px;
+                font-size: 1.4rem;
+            }
+            .form-control {
+                padding: 13px 14px;
+            }
+            h2 {
+                font-size: 1.65rem;
+            }
         }
     </style>
 </head>
 <body class="d-flex align-items-center">
     <%- include("./partials/nave") %>
 
-    <div class="container py-5">
+    <div class="container py-4 py-md-5">
         <div class="row justify-content-center">
-            <div class="col-lg-5 col-md-7 col-11">
-                <div class="auth-card p-5">
-                    <div class="text-center mb-5">
-                        <h2 class="fw-bold text-dark mb-1">Create Your Account</h2>
-                        <p class="text-muted">Join Blogify and start sharing your ideas</p>
+            <div class="col-11 col-sm-10 col-md-7 col-lg-5">
+                <div class="auth-card p-4 p-md-5">
+                    <div class="text-center mb-4 mb-md-5">
+                        <h2 class="fw-bold text-dark">Create Your Account</h2>
+                        <p class="text-muted">Join Blogify and start sharing</p>
                     </div>
 
                     <!-- Google Signup -->
-                    <a href="/user/auth/google" class="google-btn d-flex align-items-center justify-content-center gap-3 w-100 text-decoration-none text-dark mb-4">
+                    <a href="/user/auth/google" 
+                       class="google-btn d-flex align-items-center justify-content-center gap-3 w-100 text-decoration-none text-dark mb-4">
                         <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" 
                              width="24" height="24" alt="Google">
                         Sign up with Google
@@ -131,7 +148,8 @@
                             <label class="form-label fw-medium">Password</label>
                             <div class="input-group">
                                 <input type="password" id="password" name="password" class="form-control" required>
-                                <button type="button" class="btn btn-outline-secondary" id="togglePassword" style="border-radius: 0 12px 12px 0;">
+                                <button type="button" class="btn btn-outline-secondary" id="togglePassword" 
+                                        style="border-radius: 0 12px 12px 0; min-width: 50px;">
                                     👁️
                                 </button>
                             </div>
@@ -139,7 +157,7 @@
 
                         <div class="mb-4">
                             <label class="form-label fw-medium">Verification Code (OTP)</label>
-                            <div class="d-flex gap-3 justify-content-center mb-2" id="otpContainer">
+                            <div class="d-flex gap-2 gap-sm-3 justify-content-center mb-3" id="otpContainer">
                                 <input type="text" maxlength="1" class="otp-box form-control text-center" data-index="0">
                                 <input type="text" maxlength="1" class="otp-box form-control text-center" data-index="1">
                                 <input type="text" maxlength="1" class="otp-box form-control text-center" data-index="2">
@@ -182,7 +200,7 @@
             }
         });
 
-        // OTP Handling
+        // OTP Handling (Better for mobile)
         const otpInputs = document.querySelectorAll('.otp-box');
         otpInputs.forEach((input, index) => {
             input.addEventListener('input', () => {
@@ -223,18 +241,16 @@
                 const data = await res.json();
 
                 if (data.success) {
-                    alert(`✅ OTP sent successfully to ${email}`);
+                    alert(`✅ OTP sent to ${email}`);
                     this.textContent = "Resend OTP";
-                    setTimeout(() => {
-                        this.disabled = false;
-                    }, 30000);
+                    setTimeout(() => this.disabled = false, 30000);
                 } else {
                     alert(data.message || "Failed to send OTP");
                     this.disabled = false;
                     this.textContent = "Send OTP";
                 }
             } catch (err) {
-                alert("Failed to send OTP. Please try again.");
+                alert("Failed to send OTP");
                 this.disabled = false;
                 this.textContent = "Send OTP";
             }
@@ -245,7 +261,7 @@
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
-            submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Creating Account...`;
+            submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Creating...`;
 
             const formData = new FormData(this);
             const data = Object.fromEntries(formData.entries());
@@ -263,12 +279,12 @@
                     alert("🎉 Account created successfully!");
                     window.location.href = "/";
                 } else {
-                    alert(result.message || "Signup failed");
+                    alert(result.message);
                     submitBtn.disabled = false;
                     submitBtn.textContent = "Create Account";
                 }
             } catch (err) {
-                alert("Something went wrong. Please try again.");
+                alert("Something went wrong");
                 submitBtn.disabled = false;
                 submitBtn.textContent = "Create Account";
             }
