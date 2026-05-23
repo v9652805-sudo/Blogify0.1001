@@ -1,87 +1,141 @@
-// routes/User.js
-const { Router } = require("express");
-const User = require("../models/user");
-const { creatTokenForUser } = require("../services/authentication");
+const express = require("express");
+const router = express.Router();
+const User = require("../models/User");
 const { sendOTPEmail } = require("../services/email");
 
-const router = Router();
+// Temporary OTP storage (In production, replace with Redis)
+const otpStore = new Map();
 
-router.get("/signin", (req, res) => res.render("signin"));
-router.get("/signup", (req, res) => res.render("signup"));
+// ====================== OLD SIGNIN LOGIC (UNTOUCHED) ======================
+router.post("/signin", async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        const token = await User.matchPassword(email, password);
+        
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Login successful"
+        });
+    } catch (error) {
+        console.error("Signin Error:", error.message);
+        res.status(401).json({
+            success: false,
+            message: error.message || "Invalid email or password"
+        });
+    }
+});
 
 // ====================== SEND OTP ======================
 router.post("/send-otp", async (req, res) => {
     const { email } = req.body;
 
     if (!email) {
-        return res.status(400).json({ success: false, message: 'Email is required' });
+        return res.status(400).json({ success: false, message: "Email is required" });
     }
 
     try {
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const normalizedEmail = email.toLowerCase();
 
-        await User.findOneAndUpdate(
-            { email: email.toLowerCase() },
-            { 
-                email: email.toLowerCase(), 
-                otp, 
-                otpExpires: Date.now() + 5 * 60 * 1000 
-            },
-            { upsert: true, new: true }
-        );
+        // Check if email already exists
+        const existingUser = await User.findOne({ email: normalizedEmail });
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                message: "Email already registered. Please login instead."
+            });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
+
+        otpStore.set(normalizedEmail, { otp, expiresAt });
 
         await sendOTPEmail(email, otp);
 
-        res.json({ success: true, message: 'OTP sent successfully' });
-
+        res.json({ success: true, message: "OTP sent successfully" });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: 'Failed to send OTP' });
+        console.error("Send OTP Error:", error);
+        res.status(500).json({ success: false, message: "Failed to send OTP" });
     }
 });
 
-// ====================== VERIFY OTP & CREATE ACCOUNT ======================
-router.post("/verify-otp", async (req, res) => {
-    const { email, otp, fullName, password } = req.body;
+// ====================== SIGNUP (Updated) ======================
+router.post("/signup", async (req, res) => {
+    const { FullName, email, password, otp } = req.body;
+
+    if (!FullName || !email || !password || !otp) {
+        return res.status(400).json({ success: false, message: "All fields are required" });
+    }
 
     try {
-        const user = await User.findOne({ email: email.toLowerCase() });
+        const normalizedEmail = email.toLowerCase();
 
-        if (!user || !user.otp || Date.now() > user.otpExpires) {
-            return res.json({ success: false, message: "OTP expired or invalid" });
+        // Check if email already exists
+        const existingUser = await User.findOne({ email: normalizedEmail });
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                message: "Email already registered. Please login."
+            });
         }
 
-        if (user.otp !== otp) {
-            return res.json({ success: false, message: "Incorrect OTP" });
+        // Validate OTP
+        const storedOtpData = otpStore.get(normalizedEmail);
+        if (!storedOtpData) {
+            return res.status(400).json({ success: false, message: "No OTP found. Request new OTP." });
         }
 
-        // Create final user (or update)
-        const newUser = await User.findOneAndUpdate(
-            { email: email.toLowerCase() },
-            { 
-                fullName,
-                email: email.toLowerCase(),
-                password,
-                otp: null,
-                otpExpires: null
-            },
-            { new: true, upsert: true }
-        );
+        if (Date.now() > storedOtpData.expiresAt) {
+            otpStore.delete(normalizedEmail);
+            return res.status(400).json({ success: false, message: "OTP has expired. Please request a new one." });
+        }
 
-        const token = await User.matchPassword(email, password);
+        if (storedOtpData.otp !== otp) {
+            return res.status(400).json({ success: false, message: "Invalid OTP" });
+        }
 
-        res.cookie("token", token, { 
-            httpOnly: true, 
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
-            maxAge: 7 * 24 * 60 * 60 * 1000 
+        // Create new user
+        const user = await User.create({
+            fullName: FullName,
+            email: normalizedEmail,
+            password: password   // Hashing handled in User model pre-save
         });
 
-        res.json({ success: true });
+        // Clear OTP
+        otpStore.delete(normalizedEmail);
+
+        // Generate token using your original signin logic
+        const token = await User.matchPassword(normalizedEmail, password);
+
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        res.status(201).json({
+            success: true,
+            message: "Account created successfully",
+            user: {
+                id: user._id,
+                fullName: user.fullName,
+                email: user.email,
+                profileImageURL: user.profileImageURL
+            }
+        });
 
     } catch (error) {
-        console.error(error);
-        res.json({ success: false, message: "Verification failed" });
+        console.error("Signup Error:", error);
+        res.status(500).json({ success: false, message: "Signup failed. Please try again." });
     }
 });
 
