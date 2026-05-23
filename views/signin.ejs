@@ -4,79 +4,165 @@
     <%- include("./partials/head") %>
     <title>Sign In - Blogify</title>
     <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        .auth-card {
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .form-control {
+            border-radius: 12px;
+            padding: 14px 18px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+            outline: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #5a67d8);
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.35);
+        }
+
         .google-btn {
-            background-color: white;
-            color: #3c4043;
-            border: 1px solid #dadce0;
-            padding: 12px 20px;
-            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 14px;
             font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .google-btn:hover {
+            border-color: #94a3b8;
+            background: #f8fafc;
+            transform: translateY(-1px);
+        }
+
+        .divider {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 12px;
-            transition: all 0.3s;
-            text-decoration: none;
+            color: #94a3b8;
+            margin: 24px 0;
         }
-        .google-btn:hover {
-            background-color: #f8f9fa;
-            border-color: #c6c6c6;
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e2e8f0;
         }
-        .card { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .divider span {
+            padding: 0 18px;
+            font-size: 0.95rem;
+        }
     </style>
 </head>
-<body>
+<body class="d-flex align-items-center">
     <%- include("./partials/nave") %>
 
-    <div class="container d-flex justify-content-center align-items-center" style="min-height: 85vh;">
-        <div class="card p-4" style="width: 100%; max-width: 450px;">
-            <h3 class="text-center mb-4">Welcome Back</h3>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-5 col-md-7 col-11">
+                <div class="auth-card p-5">
+                    <div class="text-center mb-5">
+                        <h2 class="fw-bold text-dark mb-1">Welcome Back</h2>
+                        <p class="text-muted">Sign in to access your Blogify account</p>
+                    </div>
 
-            <% if (typeof error !== 'undefined' && error) { %>
-                <div class="alert alert-danger"><%= error %></div>
-            <% } %>
+                    <% if (typeof error !== 'undefined' && error) { %>
+                        <div class="alert alert-danger rounded-3"><%= error %></div>
+                    <% } %>
 
-            <form id="signinForm">
-                <div class="mb-3">
-                    <label class="form-label">Email address</label>
-                    <input type="email" id="email" name="email" class="form-control" required>
+                    <form id="signinForm">
+                        <div class="mb-4">
+                            <label class="form-label fw-medium">Email Address</label>
+                            <input type="email" id="email" name="email" class="form-control" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-medium">Password</label>
+                            <div class="input-group">
+                                <input type="password" id="password" name="password" class="form-control" required>
+                                <button type="button" class="btn btn-outline-secondary" id="togglePassword" style="border-radius: 0 12px 12px 0;">
+                                    👁️
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-3" id="submitBtn">
+                            Sign In
+                        </button>
+                    </form>
+
+                    <div class="text-center mb-4">
+                        <a href="#" id="forgotLink" class="text-decoration-none text-primary fw-medium">
+                            Forgot Password?
+                        </a>
+                    </div>
+
+                    <div class="divider">
+                        <span>OR</span>
+                    </div>
+
+                    <a href="/user/auth/google" class="google-btn d-flex align-items-center justify-content-center gap-3 w-100 text-decoration-none text-dark">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" 
+                             width="24" height="24" alt="Google">
+                        Continue with Google
+                    </a>
+
+                    <p class="text-center mt-4 mb-0">
+                        Don't have an account? 
+                        <a href="/user/signup" class="text-primary fw-medium">Create one</a>
+                    </p>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Password</label>
-                    <input type="password" id="password" name="password" class="form-control" required>
-                </div>
-                <button type="submit" class="btn btn-primary w-100 mb-3" id="submitBtn">Sign In</button>
-            </form>
-
-            <div class="text-center">
-                <a href="#" id="forgotLink" style="color: #667eea; text-decoration: none;">Forgot Password?</a>
             </div>
-
-            <div class="text-center my-3">
-                <strong>OR</strong>
-            </div>
-
-            <a href="/user/auth/google" class="google-btn w-100 mb-3">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" 
-                     width="22" height="22" alt="Google">
-                Continue with Google
-            </a>
-
-            <p class="text-center mt-3">
-                Don't have an account? <a href="/user/signup">Create one</a>
-            </p>
         </div>
     </div>
 
     <%- include("./partials/scripts") %>
 
     <script>
-        // Sign In
-        document.getElementById('signinForm').addEventListener('submit', async function(e) {
+        // Password Visibility Toggle
+        const toggleBtn = document.getElementById('togglePassword');
+        toggleBtn.addEventListener('click', function () {
+            const passwordField = document.getElementById('password');
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                this.textContent = '🙈';
+            } else {
+                passwordField.type = 'password';
+                this.textContent = '👁️';
+            }
+        });
+
+        // Sign In Form
+        document.getElementById('signinForm').addEventListener('submit', async function (e) {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
-            submitBtn.textContent = "Signing In...";
+            submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Signing In...`;
 
             const data = {
                 email: document.getElementById('email').value.trim(),
@@ -95,19 +181,19 @@
                 if (result.success) {
                     window.location.href = "/";
                 } else {
-                    alert(result.message);
+                    alert(result.message || "Invalid email or password");
                     submitBtn.disabled = false;
                     submitBtn.textContent = "Sign In";
                 }
             } catch (err) {
-                alert("Something went wrong");
+                alert("Something went wrong. Please try again.");
                 submitBtn.disabled = false;
                 submitBtn.textContent = "Sign In";
             }
         });
 
         // Forgot Password
-        document.getElementById('forgotLink').addEventListener('click', async function(e) {
+        document.getElementById('forgotLink').addEventListener('click', async function (e) {
             e.preventDefault();
             const email = prompt("Enter your registered email address:");
             if (!email) return;
@@ -118,11 +204,10 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email })
                 });
-
                 const data = await res.json();
                 alert(data.message);
             } catch (err) {
-                alert("Failed to process request");
+                alert("Failed to send reset link");
             }
         });
     </script>
