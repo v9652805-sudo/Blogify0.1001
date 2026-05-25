@@ -1,403 +1,259 @@
-# 🎯 Blogify - A Modern Blogging Platform
+# ✨ Blogify 2.0 - All New Features Added
 
-> A full-stack blogging application with authentication, user management, and GraphQL API support.
+## 🎯 Major Features Implemented
 
-![Node.js](https://img.shields.io/badge/Node.js-20.x-green?logo=node.js)
-![Express](https://img.shields.io/badge/Express-4.19.2-blue?logo=express)
-![MongoDB](https://img.shields.io/badge/MongoDB-8.6.0-green?logo=mongodb)
-![GraphQL](https://img.shields.io/badge/GraphQL-16.9.0-purple?logo=graphql)
+### 1. **Draft & Publishing System** ✅
+- Save blogs as drafts before publishing
+- Scheduled publishing for future dates
+- Change blog status anytime
+- Automatic publish timestamp
 
----
+### 2. **Comment System** ✅
+- Nested replies on comments
+- Comment editing and deletion
+- Comment likes
+- Moderation support
+- Email notifications on comments
+- Soft delete for comments
 
-## 📋 Table of Contents
+### 3. **Tags & Categories** ✅
+- Add multiple tags to blogs
+- Filter blogs by tags
+- Browse tagged blogs
+- Related blogs based on tags
+- Category organization
 
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Installation](#installation)
-- [Environment Variables](#environment-variables)
-- [Usage](#usage)
-- [API Endpoints](#api-endpoints)
-- [GraphQL Queries](#graphql-queries)
-- [Project Structure](#project-structure)
-- [Contributing](#contributing)
-- [License](#license)
+### 4. **Like System** ✅
+- Like/unlike blogs
+- Like count tracking
+- Like notifications
+- Per-blog like analytics
 
----
+### 5. **Blog Analytics** ✅
+- View count per blog
+- Daily view tracking
+- View source tracking (direct, search, social, referral)
+- Device tracking (mobile, tablet, desktop)
+- Geographic location tracking
+- Trending blogs
+- Most liked blogs
+- Author statistics dashboard
+- Top performing blogs
 
-## ✨ Features
+### 6. **Reading Time** ✅
+- Automatic reading time calculation
+- Based on average reading speed
+- Displayed on blog view
 
-### Authentication & Authorization
-- 🔐 **Email/Password Authentication** with OTP verification
-- 🔑 **JWT Token-based Sessions**
-- 🌐 **Google OAuth 2.0 Integration**
-- 👥 **Role-based Access Control** (USER & ADMIN)
+### 7. **Follower System** ✅
+- Follow/unfollow users
+- Follower count
+- Following count
+- Follower notifications
+- Email on new followers
 
-### Blogging Features
-- ✍️ **Create, Read, Update, Delete (CRUD)** blogs
-- 🏞️ **Cover Image Upload** via Cloudinary
-- 🔍 **Advanced Search** functionality
-- 📊 **Filter & Sort** (by title, newest, oldest)
-- 📄 **Pagination Support**
-- 👤 **User Profile Management**
+### 8. **Featured Blogs** ✅
+- Admin can feature blogs
+- Featured section on homepage
+- Featured rank ordering
+- Featured blogs carousel
 
-### Admin Dashboard
-- 📈 **View All Users** and their blog statistics
-- 🗑️ **User Management** (delete users and their blogs)
-- 📊 **Analytics Overview**
-
-### API & Developer Tools
-- 🚀 **REST API** endpoints
-- 📡 **GraphQL API** with interactive GraphiQL interface
-- 📧 **Email Notifications** (OTP & Password Reset)
-
----
-
-## 🛠️ Tech Stack
-
-### Backend
-- **Node.js** (v20.x) - JavaScript runtime
-- **Express.js** (v4.19.2) - Web framework
-- **MongoDB** (v8.6.0) - NoSQL database
-- **Mongoose** - MongoDB ODM
-
-### Frontend
-- **EJS** - Server-side templating
-- **Bootstrap** - CSS framework
-- **JavaScript** - Client-side scripting
-
-### APIs & Services
-- **GraphQL** (v16.9.0) - Query language for APIs
-- **Express-GraphQL** - GraphQL middleware
-- **Passport.js** - Authentication middleware
-- **JWT** - Token-based authentication
-- **Nodemailer** - Email service
-- **Cloudinary** - Image hosting & management
-
-### Deployment
-- **Docker** - Containerization
-- **Render** - Cloud hosting
-
----
-
-## 🚀 Installation
-
-### Prerequisites
-- Node.js v20.x or higher
-- MongoDB (local or Atlas)
-- Cloudinary account (for image uploads)
-- Gmail account (for email notifications)
-- Google OAuth credentials (optional)
-
-### Clone & Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/webdeveloper10908-bit/Blogify5.0.0.1.git
-cd Blogify5.0.0.1
-
-# Install dependencies
-npm install
-
-# Create .env file
-cp .env.example .env
-
-# Start development server
-npm run dev
-
-# Or start production server
-npm start
-```
-
-Server runs on: `http://localhost:8000`
-
----
-
-## 🔧 Environment Variables
-
-Create a `.env` file in the root directory:
-
-```env
-# Server
-PORT=8000
-NODE_ENV=production
-
-# MongoDB
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/blogify
-
-# JWT
-JWT_SECRET=your_jwt_secret_key_here
-
-# Cloudinary
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-
-# Email Service (Gmail)
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASSWORD=your_app_password
-
-# Google OAuth
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_CALLBACK_URL=https://your-domain/user/auth/google/callback
-```
-
----
-
-## 📖 Usage
-
-### User Registration & Login
-
-**Sign Up:**
-1. Go to `/user/signup`
-2. Enter email and receive OTP
-3. Verify OTP and set password
-4. Account created successfully!
-
-**Sign In:**
-1. Go to `/user/signin`
-2. Enter email and password
-3. Or use "Sign in with Google"
-
-**Password Reset:**
-1. Click "Forgot Password" on signin page
-2. Enter email
-3. Check email for reset link
-4. Set new password
-
-### Create & Manage Blogs
-
-**Create Blog:**
-1. Sign in to your account
-2. Click "Create New Blog"
-3. Add title, content, and cover image
-4. Publish blog
-
-**View Blogs:**
-- Home page displays all blogs
-- Search by title or content
-- Filter by sort order (newest, oldest, A-Z)
+### 9. **Advanced Search** ✅
+- Search by title and content
+- Filter by tags
+- Filter by sort order
+- Filter by date range
 - Pagination support
 
-**Your Profile:**
-- `/user/profile` - View all your blogs
-- Search your own blogs
-- Delete your blogs
+### 10. **Dark Mode Theme** ✅
+- Light/Dark theme toggle
+- User theme preference saved
+- Database persistence
 
-### Admin Panel
+### 11. **Notifications System** ✅
+- Comment notifications
+- Like notifications
+- Follow notifications
+- Reply notifications
+- Mention notifications
+- Unread notification count
+- Mark as read functionality
+- Mark all as read functionality
+- Notification center
 
-**Access Admin Dashboard:**
-- Only users with ADMIN role can access
-- Visit `/admin/users`
-- View all users and their blog statistics
-- Delete users and their content
+### 12. **User Profiles** ✅
+- Enhanced profile information
+- Bio section
+- Website link
+- Profile image
+- Follower/Following count
+- Blog statistics
+- Blog activity feed
 
----
+### 13. **Security Enhancements** ✅
+- Rate limiting on login attempts
+- Rate limiting on OTP requests
+- Rate limiting on API calls
+- Rate limiting on blog creation
+- Input validation and sanitization
+- CSRF protection ready
+- Security headers (X-Content-Type-Options, X-Frame-Options, X-XSS-Protection)
+- HTTP-only cookies
+- Same-site cookie protection
 
-## 🔌 API Endpoints
+### 14. **Soft Deletes** ✅
+- Blogs have soft delete (not permanently removed)
+- Comments support soft delete
+- Restore capability
+- Deleted timestamp tracking
 
-### Authentication Routes
-```
-POST   /user/signup              - Register new user
-POST   /user/signin              - Login with email & password
-POST   /user/send-otp            - Send OTP to email
-POST   /user/forgot-password     - Request password reset
-POST   /user/reset-password      - Reset password with token
-GET    /user/logout              - Logout user
-GET    /user/auth/google         - Google OAuth login
-GET    /user/auth/google/callback - Google OAuth callback
-```
+### 15. **Blog Metadata & SEO** ✅
+- Meta descriptions
+- Blog excerpt
+- URL slugs
+- SEO-friendly URLs
+- Structured data ready
 
-### Blog Routes (Authenticated)
-```
-GET    /blogs/add-new            - Get create blog form
-POST   /blogs/add-new            - Create new blog
-GET    /blogs/:id                - Get single blog
-DELETE /blogs/:id                - Delete blog (owner only)
-```
+### 16. **Email Notifications** ✅
+- Email on new comment
+- Email on new follower
+- Email on blog likes
+- Customizable notification preferences
+- Daily digest ready
 
-### Profile Routes (Authenticated)
-```
-GET    /user/profile             - View user's blogs
-GET    /user/profile?search=...  - Search user's blogs
-```
+### 17. **Related Blogs** ✅
+- Show similar blogs based on tags
+- Author's other blogs
+- Related blogs section on blog view
 
-### Admin Routes (Admin Only)
-```
-GET    /admin/users              - View all users & blogs
-DELETE /admin/users/:id          - Delete user
-```
-
-### GraphQL
-```
-GET/POST /graphql                - GraphQL endpoint
-```
-
----
-
-## 📡 GraphQL Queries
-
-Access GraphiQL interface at: `https://your-domain/graphql`
-
-### Example Queries
-
-**Get All Blogs:**
-```graphql
-query {
-  blogs(limit: 10, sort: "newest") {
-    _id
-    title
-    body
-    coverImageURL
-    createdAt
-    createdBy {
-      fullName
-      email
-      profileImageURL
-    }
-  }
-}
-```
-
-**Get Single Blog:**
-```graphql
-query {
-  blog(id: "60f5d9c8e3f2a1b2c3d4e5f6") {
-    _id
-    title
-    body
-    createdBy {
-      fullName
-    }
-  }
-}
-```
-
-**Search Blogs:**
-```graphql
-query {
-  blogs(search: "nodejs", limit: 5) {
-    _id
-    title
-    createdAt
-  }
-}
-```
-
-**Get Current User:**
-```graphql
-query {
-  me {
-    _id
-    fullName
-    email
-    role
-    profileImageURL
-  }
-}
-```
+### 18. **Analytics Dashboard** ✅
+- Trending blogs endpoint
+- Most liked blogs endpoint
+- Author statistics
+- Blog performance metrics
+- Daily view tracking
 
 ---
 
-## 📁 Project Structure
+## 📁 New Files Added
 
-```
-Blogify5.0.0.1/
-├── models/                 # Database schemas
-│   ├── user.js            # User model with auth methods
-│   └── Blog.js            # Blog model
-├── routes/                # Express routes
-│   ├── User.js            # Auth routes
-│   ├── Blog.js            # Blog routes
-│   ├── Profile.js         # User profile routes
-│   ├── Admin.js           # Admin routes
-│   └── GoogleAuthentication.js
-├── middlewares/           # Custom middlewares
-│   ├── authentication.js  # Auth middleware
-│   ├── queryParams.js     # Query parsing middleware
-│   └── CloudinaryUploads.js
-├── services/              # Business logic
-│   ├── authentication.js  # JWT utilities
-│   └── email.js           # Email service
-├── graphql/               # GraphQL setup
-│   └── schema.js          # GraphQL schema & resolvers
-├── views/                 # EJS templates
-│   ├── home.ejs          # Home page
-│   ├── addBlog.ejs       # Create blog form
-│   ├── profile.ejs       # User profile
-│   └── partials/         # Reusable components
-├── public/               # Static files (CSS, JS, images)
-├── app.js                # Main application file
-├── package.json          # Dependencies
-├── Dockerfile            # Docker configuration
-└── .env.example          # Environment variables template
-```
+### Models
+- `models/Comment.js` - Comment model with nested replies
+- `models/Notification.js` - Notification tracking
+- `models/BlogAnalytics.js` - Blog analytics and metrics
+
+### Routes
+- `routes/Comment.js` - Comment CRUD operations
+- `routes/Follow.js` - Follow/unfollow functionality
+- `routes/Notification.js` - Notification management
+- `routes/Analytics.js` - Analytics endpoints
+
+### Middleware
+- `middlewares/validation.js` - Input validation and sanitization
+- `middlewares/rateLimiting.js` - Rate limiting for security
+
+### Services
+- `services/notificationService.js` - Notification creation and management
+- `services/analyticsService.js` - Analytics tracking and retrieval
 
 ---
 
-## 🔐 Security Features
+## 🔄 Enhanced Files
 
-✅ **Password Hashing** - SHA256 with salt
-✅ **JWT Tokens** - Secure token-based auth (7-day expiry)
-✅ **HTTP-only Cookies** - Protection against XSS
-✅ **CSRF Protection** - Same-site cookies
-✅ **Input Validation** - Email & OTP verification
-✅ **Rate Limiting** - OTP expiry (5 minutes)
-✅ **Environment Variables** - Sensitive data protection
+### Models
+- `models/Blog.js` - Enhanced with drafts, tags, categories, reading time, featured status, soft delete, view count, likes
+- `models/user.js` - Enhanced with theme, bio, website, followers, following, notification settings
 
----
+### Routes
+- `routes/Blog.js` - Added like, featured, tag search, soft delete, analytics
+- `routes/User.js` - Added rate limiting and validation
+- `routes/Comment.js` - New comprehensive comment system
 
-## 🐳 Docker Deployment
-
-```bash
-# Build Docker image
-docker build -t blogify:latest .
-
-# Run container
-docker run -p 8000:8000 \
-  -e MONGODB_URI=your_mongodb_uri \
-  -e JWT_SECRET=your_secret \
-  blogify:latest
-```
+### Core
+- `app.js` - Added new routes, security headers, featured blogs on homepage
+- `package.json` - Added express-rate-limit dependency
 
 ---
 
-## 📝 Contributing
+## 🔐 Security Features Added
 
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-This project is licensed under the ISC License.
+✅ Rate limiting (login, OTP, API, blog creation)
+✅ Input validation and sanitization
+✅ Security headers (XSS, clickjacking, content type protection)
+✅ CSRF token ready
+✅ HTTP-only cookies
+✅ Same-site cookie protection
+✅ Soft deletes (audit trail)
+✅ User role validation
+✅ Ownership checks on updates/deletes
 
 ---
 
-## 🙋 Support
+## 🎨 UI/UX Components Ready
 
-For issues and questions:
-- Open an issue on [GitHub Issues](https://github.com/webdeveloper10908-bit/Blogify5.0.0.1/issues)
-- Contact: webdeveloper10908@gmail.com
-
----
-
-## 🌐 Live Demo
-
-**Visit:** [Blogify on Render](https://blogify5-0-0-1.onrender.com)
-
----
-
-## ⭐ Show Your Support
-
-If you found this project helpful, please consider giving it a star! ⭐
+The following views need to be created/updated:
+- Home page with featured blogs carousel
+- Blog view with comments section, like button, related blogs
+- User profile with follower/following lists
+- Notification center
+- Analytics dashboard
+- Settings page for theme and notification preferences
+- Tag browsing page
+- Search results page
+- Featured blogs section
 
 ---
 
-**Made with ❤️ by [webdeveloper10908-bit](https://github.com/webdeveloper10908-bit)**
+## 📊 API Endpoints Summary
+
+### Comments
+- `GET /comments/blog/:blogId` - Get blog comments
+- `POST /comments/blog/:blogId` - Create comment
+- `PUT /comments/:commentId` - Update comment
+- `DELETE /comments/:commentId` - Delete comment
+- `POST /comments/:commentId/like` - Like comment
+
+### Follow
+- `POST /follow/:userId/follow` - Follow/unfollow user
+- `GET /follow/:userId/followers` - Get followers
+- `GET /follow/:userId/following` - Get following list
+
+### Notifications
+- `GET /notifications` - Get user notifications
+- `GET /notifications/unread/count` - Get unread count
+- `PUT /notifications/:notificationId/read` - Mark as read
+- `PUT /notifications/all/read` - Mark all as read
+
+### Analytics
+- `GET /analytics/trending` - Get trending blogs
+- `GET /analytics/most-liked` - Get most liked blogs
+- `GET /analytics/blog/:blogId` - Get blog analytics
+- `GET /analytics/author/stats` - Get author stats
+
+### Blogs
+- `POST /blogs/:id/like` - Like blog
+- `GET /blogs/featured/list` - Get featured blogs
+- `GET /blogs/tags/:tag` - Get blogs by tag
+- `PUT /blogs/:id` - Update blog with new features
+
+---
+
+## 🚀 Next Steps
+
+1. Create/update EJS views for new features
+2. Add frontend JavaScript for interactive features
+3. Implement email digest scheduling
+4. Add image optimization for blog covers
+5. Implement Redis caching
+6. Add database migrations
+7. Create Swagger API documentation
+8. Add Jest tests
+9. Implement websockets for real-time notifications
+10. Add internationalization (i18n)
+
+---
+
+**Version**: 2.0.0
+**Last Updated**: 2026-05-25
+**Status**: Ready for Integration
+
