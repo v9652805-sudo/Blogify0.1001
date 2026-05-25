@@ -18,6 +18,14 @@ const PORT = process.env.PORT || 8000;
 
 require("dotenv").config();
 
+// ====================== MONGODB CONNECTION ======================
+mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/blogify")
+    .then(() => console.log("✅ MongoDB Connected"))
+    .catch(err => {
+        console.error("❌ MongoDB Connection Error:", err.message);
+        process.exit(1);
+    });
+
 // ====================== MIDDLEWARE ======================
 app.set("view engine", "ejs");
 app.set("views", path.resolve("./views"));
