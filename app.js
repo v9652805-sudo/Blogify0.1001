@@ -20,7 +20,6 @@ const PORT = process.env.PORT || 8000;
 
 require("dotenv").config();
 
-// Middleware
 app.set("view engine", "ejs");
 app.set("views", path.resolve("./views"));
 
@@ -31,20 +30,21 @@ app.use(express.static(path.resolve("./public")));
 
 app.use(passport.initialize());
 app.use(checkForAuthenticationCookie("token"));
-app.use(queryHandler);                    // Query Params Middleware
+app.use(queryHandler);   // Important
 
-// ====================== GRAPHQL ======================
+// GraphQL
 app.use('/graphql', graphqlHTTP({
     schema: schema,
     rootValue: root,
     graphiql: true
 }));
 
-// ====================== HOME ROUTE ======================
+// ====================== HOME ROUTE (Fixed) ======================
 app.get("/", async (req, res) => {
     try {
         const Blog = require("./models/Blog");
-        const { search, sort, page, limit, skip } = req.queryParams;
+        
+        const { search = '', sort = 'newest', page = 1, limit = 9 } = req.queryParams || req.query;
 
         const filter = search ? {
             $or: [
@@ -57,10 +57,12 @@ app.get("/", async (req, res) => {
         if (sort === "oldest") sortOption = { createdAt: 1 };
         if (sort === "title") sortOption = { title: 1 };
 
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
         const blogs = await Blog.find(filter)
             .sort(sortOption)
             .skip(skip)
-            .limit(limit)
+            .limit(parseInt(limit))
             .populate("createdBy", "fullName profileImageURL")
             .lean();
 
@@ -68,22 +70,22 @@ app.get("/", async (req, res) => {
         const totalPages = Math.ceil(totalBlogs / limit);
 
         res.render("home", {
-            title: "Blogify - Home",
+            title: "Blogify",
             user: req.user || null,
-            blogs,
-            currentPage: page,
+            blogs: blogs || [],
+            currentPage: parseInt(page),
             totalPages,
             totalBlogs,
             search,
             sort
         });
     } catch (error) {
-        console.error("Home Error:", error);
-        res.status(500).send("Internal Server Error");
+        console.error("🚨 Home Route Error:", error);
+        res.status(500).send("Internal Server Error - Check Server Logs");
     }
 });
 
-// Routes
+// Other Routes
 app.use("/admin", AdminRoute);
 app.use("/user/profile", ProfileRoute);
 app.use("/user", UserRoute);
@@ -92,5 +94,7 @@ app.use("/blogs", BlogRoute);
 
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📊 GraphQL → http://localhost:${PORT}/graphql`);
+    console.log(`📊 GraphQL → /graphql`);
 });
+
+module.exports = app;
