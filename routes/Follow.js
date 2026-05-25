@@ -10,52 +10,104 @@ router.use(restrictToLoggedInUserOnly);
 router.post("/:userId/follow", async (req, res) => {
     try {
         const { userId } = req.params;
+        const currentUserId = req.user._id.toString();
 
-        if (userId === req.user._id.toString()) {
-            return res.status(400).json({ success: false, message: "Cannot follow yourself" });
+        // Validate user ID format
+        if (!userId || userId === currentUserId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Cannot follow yourself" 
+            });
+        }
+
+        // Get fresh user data from database
+        const currentUser = await User.findById(currentUserId);
+        if (!currentUser) {
+            return res.status(401).json({ 
+                success: false, 
+                message: "User session invalid" 
+            });
         }
 
         const targetUser = await User.findById(userId);
         if (!targetUser) {
-            return res.status(404).json({ success: false, message: "User not found" });
-        }
-
-        const isFollowing = req.user.isFollowing(userId);
-
-        if (isFollowing) {
-            // Unfollow
-            await req.user.unfollowUser(userId);
-            await targetUser.removeFollower(req.user._id);
-        } else {
-            // Follow
-            await req.user.followUser(userId);
-            await targetUser.addFollower(req.user._id);
-
-            // Send notification
-            await NotificationService.createNotification(
-                userId,
-                "follow",
-                {
-                    title: "New follower",
-                    message: `${req.user.fullName} started following you`,
-                    actor: req.user._id
-                }
-            );
-
-            // Send email
-            await NotificationService.sendEmailNotification(targetUser, "follow", {
-                actorName: req.user.fullName
+            return res.status(404).json({ 
+                success: false, 
+                message: "User not found" 
             });
         }
 
-        res.json({ 
-            success: true, 
-            following: !isFollowing,
-            message: isFollowing ? "Unfollowed" : "Followed"
-        });
+        // Check if already following
+        const isFollowing = currentUser.isFollowing(userId);
+
+        if (isFollowing) {
+            // UNFOLLOW: Remove from current user's following list
+            await User.findByIdAndUpdate(
+                currentUserId,
+                { $pull: { following: userId } },
+                { new: true }
+            );
+
+            // Remove current user from target user's followers list
+            await User.findByIdAndUpdate(
+                userId,
+                { $pull: { followers: currentUserId } },
+                { new: true }
+            );
+
+            return res.json({ 
+                success: true, 
+                following: false,
+                message: "Unfollowed successfully"
+            });
+        } else {
+            // FOLLOW: Add to current user's following list
+            await User.findByIdAndUpdate(
+                currentUserId,
+                { $addToSet: { following: userId } },
+                { new: true }
+            );
+
+            // Add current user to target user's followers list
+            await User.findByIdAndUpdate(
+                userId,
+                { $addToSet: { followers: currentUserId } },
+                { new: true }
+            );
+
+            // Send notification to target user
+            try {
+                await NotificationService.createNotification(
+                    userId,
+                    "follow",
+                    {
+                        title: "New follower",
+                        message: `${currentUser.fullName} started following you`,
+                        actor: currentUserId
+                    }
+                );
+
+                // Send email notification
+                await NotificationService.sendEmailNotification(targetUser, "follow", {
+                    actorName: currentUser.fullName
+                });
+            } catch (notifError) {
+                console.error("Notification error (non-critical):", notifError);
+                // Don't fail the follow operation if notification fails
+            }
+
+            return res.json({ 
+                success: true, 
+                following: true,
+                message: "Followed successfully"
+            });
+        }
     } catch (error) {
         console.error("Follow Error:", error);
-        res.status(500).json({ success: false, message: "Failed to follow user" });
+        res.status(500).json({ 
+            success: false, 
+            message: error.message || "Failed to follow user" 
+        });
     }
 });
 
@@ -75,20 +127,27 @@ router.get("/:userId/followers", async (req, res) => {
             });
 
         if (!user) {
-            return res.status(404).json({ success: false, message: "User not found" });
+            return res.status(404).json({ 
+                success: false, 
+                message: "User not found" 
+            });
         }
 
-        const total = user.followers.length;
+        const total = await User.findById(userId).then(u => u.followers.length);
 
         res.json({
             success: true,
             followers: user.followers,
             total,
-            pages: Math.ceil(total / limit)
+            pages: Math.ceil(total / limit),
+            currentPage: parseInt(page)
         });
     } catch (error) {
         console.error("Error fetching followers:", error);
-        res.status(500).json({ success: false, message: "Failed to fetch followers" });
+        res.status(500).json({ 
+            success: false, 
+            message: "Failed to fetch followers" 
+        });
     }
 });
 
@@ -108,20 +167,27 @@ router.get("/:userId/following", async (req, res) => {
             });
 
         if (!user) {
-            return res.status(404).json({ success: false, message: "User not found" });
+            return res.status(404).json({ 
+                success: false, 
+                message: "User not found" 
+            });
         }
 
-        const total = user.following.length;
+        const total = await User.findById(userId).then(u => u.following.length);
 
         res.json({
             success: true,
             following: user.following,
             total,
-            pages: Math.ceil(total / limit)
+            pages: Math.ceil(total / limit),
+            currentPage: parseInt(page)
         });
     } catch (error) {
         console.error("Error fetching following:", error);
-        res.status(500).json({ success: false, message: "Failed to fetch following" });
+        res.status(500).json({ 
+            success: false, 
+            message: "Failed to fetch following" 
+        });
     }
 });
 
