@@ -1,0 +1,49 @@
+// graphql/schema.js
+const { buildSchema } = require("graphql");
+const Blog = require("../models/Blog");
+
+const schema = buildSchema(`
+  type User {
+    _id: ID
+    fullName: String
+    email: String
+    profileImageURL: String
+  }
+
+  type Blog {
+    _id: ID
+    title: String
+    body: String
+    coverImageURL: String
+    createdAt: String
+    createdBy: User
+  }
+
+  type Query {
+    blogs(search: String, sort: String, page: Int, limit: Int): [Blog]
+    blog(id: ID!): Blog
+  }
+`);
+
+const root = {
+    blogs: async ({ search, sort = "newest", page = 1, limit = 9 }) => {
+        const filter = search ? {
+            $or: [{ title: { $regex: search, $options: "i" } }, { body: { $regex: search, $options: "i" } }]
+        } : {};
+
+        let sortOption = { createdAt: -1 };
+        if (sort === "oldest") sortOption = { createdAt: 1 };
+        if (sort === "title") sortOption = { title: 1 };
+
+        return await Blog.find(filter)
+            .sort(sortOption)
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .populate("createdBy", "fullName profileImageURL")
+            .lean();
+    },
+
+    blog: async ({ id }) => await Blog.findById(id).populate("createdBy").lean()
+};
+
+module.exports = { schema, root };
