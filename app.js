@@ -43,11 +43,11 @@ const marked = new Marked(
 );
 
 // ====================== MONGODB CONNECTION ======================
-// Fixed: Removed process.exit(1) so connection retry logic or errors don't hard crash the Vercel function lifecycle
 mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/blogify")
-    .then(() => console.log("✅ MongoDB Connected"))
+    .then(() => console.log("âœ… MongoDB Connected"))
     .catch(err => {
-        console.error("❌ MongoDB Connection Error:", err.message);
+        console.error("âŒ MongoDB Connection Error:", err.message);
+        process.exit(1);
     });
 
 // ====================== MIDDLEWARE ======================
@@ -143,6 +143,7 @@ app.use("/graphql", graphqlHTTP((req) => ({
 app.get("/", async (req, res) => {
     try {
         const Blog = require("./models/Blog");
+        // Safe fallback to req.query if queryParams is not available
         const queryParams = req.queryParams || req.query || {};
         const { search = '', sort = 'newest', page = 1, limit = 9 } = queryParams;
 
@@ -197,7 +198,7 @@ app.get("/", async (req, res) => {
             sort
         });
     } catch (error) {
-        console.error("🚨 Home Route Error:", error.message);
+        console.error("ðŸš¨ Home Route Error:", error.message);
         res.status(500).send("Internal Server Error");
     }
 });
@@ -220,15 +221,12 @@ app.use((req, res) => {
 
 // ====================== ERROR HANDLER ======================
 app.use((err, req, res, next) => {
-    console.error("🚨 Server Error:", err);
+    console.error("ðŸš¨ Server Error:", err);
     res.status(500).send("Internal Server Error");
 });
 
-// Fixed: Only launch listener locally; avoid execution block inside serverless context
-if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => {
-        console.log(`✅ Local Server running on port ${PORT}`);
-    });
-}
-
+app.listen(PORT, () => {
+    console.log(`âœ… Server running on port ${PORT}`);
+    console.log(`ðŸŒ Visit http://localhost:${PORT}`);
+});
 module.exports = app;
