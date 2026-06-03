@@ -116,10 +116,27 @@ router.post('/send-otp', otpLimiter, async (req, res) => {
         // Store OTP in memory
         otpStore.set(normalizedEmail, { otp, expires });
 
-        // Send OTP email
-        await sendOTPEmail(normalizedEmail, otp);
+        console.log(`\n🔐 ========== OTP STORAGE ==========`);
+        console.log(`🔐 Email: ${normalizedEmail}`);
+        console.log(`🔐 OTP: ${otp}`);
+        console.log(`🔐 Stored OTPs Count: ${otpStore.size}`);
+        console.log(`🔐 ==================================\n`);
 
-        console.log(`📧 OTP sent to ${normalizedEmail}: ${otp}`);
+        // Send OTP email with error handling
+        try {
+            await sendOTPEmail(normalizedEmail, otp);
+        } catch (emailError) {
+            console.error("\n❌ ========== OTP EMAIL ERROR ==========");
+            console.error(`❌ Email: ${normalizedEmail}`);
+            console.error(`❌ Error: ${emailError.message}`);
+            console.error("❌ =====================================\n");
+            
+            // Still return success for debugging, but indicate email service issue
+            return res.status(500).json({ 
+                success: false, 
+                message: `Email service error: ${emailError.message}. Please check server logs.` 
+            });
+        }
 
         res.json({ 
             success: true, 
@@ -165,6 +182,13 @@ router.post('/signup', async (req, res) => {
 
         // Verify OTP
         const stored = otpStore.get(normalizedEmail);
+        
+        console.log(`\n🔐 ========== OTP VERIFICATION ==========`);
+        console.log(`🔐 Email: ${normalizedEmail}`);
+        console.log(`🔐 Provided OTP: ${otp}`);
+        console.log(`🔐 Stored OTP: ${stored ? stored.otp : 'NOT FOUND'}`);
+        console.log(`🔐 ==================================\n`);
+        
         if (!stored) {
             return res.status(400).json({ 
                 success: false, 
@@ -266,10 +290,16 @@ router.post('/forgot-password', async (req, res) => {
         // Build reset link
         const resetLink = `${process.env.APP_URL || 'http://localhost:8000'}/user/reset-password?token=${resetToken}`;
 
-        // Send reset password email
-        await sendResetPasswordEmail(normalizedEmail, resetLink);
-
-        console.log(`📧 Password reset link sent to ${normalizedEmail}`);
+        // Send reset password email with error handling
+        try {
+            await sendResetPasswordEmail(normalizedEmail, resetLink);
+        } catch (emailError) {
+            console.error("❌ Reset email failed:", emailError.message);
+            return res.status(500).json({ 
+                success: false, 
+                message: `Email service error: ${emailError.message}` 
+            });
+        }
 
         res.json({ 
             success: true, 
@@ -385,15 +415,16 @@ router.post('/reset-password', async (req, res) => {
     }
 });
 
-// ====================== CLEANUP OLD OTP & TOKENS (OPTIONAL) ======================
-// Run this periodically to clean up expired OTP and reset tokens
+// ====================== CLEANUP OLD OTP & TOKENS ======================
 setInterval(() => {
     const now = Date.now();
+    let otpCleaned = 0, tokenCleaned = 0;
 
     // Clean expired OTPs
     for (const [email, data] of otpStore.entries()) {
         if (data.expires < now) {
             otpStore.delete(email);
+            otpCleaned++;
         }
     }
 
@@ -401,8 +432,14 @@ setInterval(() => {
     for (const [token, data] of resetTokens.entries()) {
         if (data.expires < now) {
             resetTokens.delete(token);
+            tokenCleaned++;
         }
+    }
+
+    if (otpCleaned > 0 || tokenCleaned > 0) {
+        console.log(`🧹 Cleanup: Removed ${otpCleaned} expired OTPs, ${tokenCleaned} expired reset tokens`);
     }
 }, 5 * 60 * 1000); // Run every 5 minutes
 
 module.exports = router;
+
