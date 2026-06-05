@@ -79,24 +79,7 @@
 <body>
     <%- include("./partials/nave") %>
 
-    <div class="container my-4">
-        <div class="row">
-            <div class="col-lg-8">
-                <a href="/" class="btn btn-outline-primary btn-sm mb-3"><i class="fas fa-arrow-left"></i> Back</a>
-                <h1 class="fw-bold mb-3"><%= blog.title %></h1>
-                <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
-                    <img src="<%= blog.createdBy.profileImageURL %>" width="44" height="44" class="rounded-circle" onerror="this.src='/imgs/default.png';">
-                    <div>
-                        <div class="fw-bold"><%= blog.createdBy.fullName %></div>
-                        <small class="text-muted"><%= formatDate(blog.createdAt) %> • <%= blog.readingTime || 0 %> min read • <%= blog.viewCount || 0 %> views</small>
-                    </div>
-                    <% if (locals.user && locals.user._id.toString() === blog.createdBy._id.toString()) { %>
-                        <div class="ms-auto">
-                            <a href="/blogs/<%= blog._id %>/edit" class="btn btn-outline-secondary btn-sm"><i class="fas fa-edit"></i></a>
-                            <button class="btn btn-outline-danger btn-sm" onclick="deleteBlog('<%= blog._id %>')"><i class="fas fa-trash"></i></button>
-                        </div>
-                    <% } %>
-                </div>
+    
 
                 <% if (blog.coverImageURL) { %>
                     <img src="<%= blog.coverImageURL %>" class="img-fluid rounded-3 mb-4 w-100" style="max-height: 400px; object-fit: cover;" onerror="this.style.display='none';">
