@@ -2,20 +2,20 @@ const BlogAnalytics = require("../models/BlogAnalytics");
 const Blog = require("../models/Blog");
 
 class AnalyticsService {
-    // Track blog view
+    // Track blog view — analytics counters only.
+    // viewCount on the Blog document is managed exclusively by routes/Blog.js
+    // GET /:id to avoid double-counting.
     static async trackView(blogId, userId, source = "direct") {
         try {
-            // Update blog view count
-            await Blog.findByIdAndUpdate(
-                blogId,
-                { $inc: { viewCount: 1 } }
-            );
+            // ✅ FIX: Removed Blog.findByIdAndUpdate({ $inc: { viewCount: 1 } }) that
+            // was here before. The route handler already increments viewCount after the
+            // 24h deduplication check. Calling it here too was doubling every view count.
 
-            // Update analytics
             let analytics = await BlogAnalytics.findOne({ blog: blogId });
 
             if (!analytics) {
                 const blog = await Blog.findById(blogId);
+                if (!blog) return; // Guard against race condition on deleted blogs
                 analytics = await BlogAnalytics.create({
                     blog: blogId,
                     author: blog.createdBy
@@ -24,8 +24,9 @@ class AnalyticsService {
 
             analytics.totalViews += 1;
 
-            // Track source
-            if (analytics.viewSource[source]) {
+            // Track traffic source
+            const validSources = ["direct", "search", "social", "referral"];
+            if (validSources.includes(source)) {
                 analytics.viewSource[source] += 1;
             }
 
@@ -130,4 +131,3 @@ class AnalyticsService {
 }
 
 module.exports = AnalyticsService;
-
