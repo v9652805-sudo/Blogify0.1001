@@ -19,7 +19,6 @@ process.on('warning', (warning) => {
     console.warn(warning);
 });
 
-// ====================== ROUTE IMPORTS ======================
 const UserRoute = require("./routes/User");
 const GoogleAuthRoute = require("./routes/GoogleAuthentication");
 const BlogRoute = require("./routes/Blog");
@@ -30,7 +29,6 @@ const FollowRoute = require("./routes/Follow");
 const NotificationRoute = require("./routes/Notification");
 const AnalyticsRoute = require("./routes/Analytics");
 
-// NEW FEATURE ROUTES
 const BadgeRoute = require("./routes/Badge");
 const BookmarkRoute = require("./routes/Bookmark");
 const ShareRoute = require("./routes/Share");
@@ -59,9 +57,9 @@ const marked = new Marked(
 
 // ====================== MONGODB CONNECTION ======================
 mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/blogify")
-    .then(() => console.log("✅ MongoDB Connected"))
+    .then(() => console.log("âœ… MongoDB Connected"))
     .catch(err => {
-        console.error("❌ MongoDB Connection Error:", err.message);
+        console.error("âŒ MongoDB Connection Error:", err.message);
         process.exit(1);
     });
 
@@ -105,21 +103,23 @@ app.locals.formatDate = function(date) {
 };
 
 /**
- * Global Helper Engine for rendering markdown safely
+ * Global Helper Engine
+ * Clears database formatting flags, stabilizes code block segments, 
+ * escapes raw symbols safely, and returns syntactically styled HTML strings.
  */
 app.locals.renderMarkdown = function(rawContent) {
     if (!rawContent) return '';
     
     let contentString = String(rawContent);
 
-    // Isolate code blocks
+    // 1. ISOLATE CODE BLOCKS: Extract all backtick sections to protect code contents from debris filters
     const codeBlocks = [];
     contentString = contentString.replace(/```([\s\S]*?)```/g, (match) => {
         codeBlocks.push(match);
         return `__BLOGIFY_CODE_BLOCK_PLACEHOLDER_${codeBlocks.length - 1}__`;
     });
 
-    // Clean formatting artifacts
+    // 2. CLEAN SYSTEMIC DEBRIS: Safe execution only applied to markdown body text structure
     contentString = contentString
         .replace(/\/ppbr\/pp/g, '\n\n')
         .replace(/\/ppbr\/ph2/g, '\n\n## ')
@@ -134,15 +134,19 @@ app.locals.renderMarkdown = function(rawContent) {
         .replace(/<<\/strong>/g, '**')
         .replace(/<<strong>/g, '**');
 
-    // Restore code blocks
+    // 3. RESTORE CODE BLOCKS: Re-insert pure unescaped code snippets back into place for Marked + Highlight.js
     contentString = contentString.replace(/__BLOGIFY_CODE_BLOCK_PLACEHOLDER_(\d+)__/g, (match, index) => {
         return codeBlocks[parseInt(index)];
     });
 
+    // 4. COMPILE STRUCTURES: Let marked parse blocks cleanly and auto-escape elements contextually
     return marked.parse(contentString);
 };
+// ============================================================
 
 // ====================== GRAPHQL ENDPOINT ======================
+// graphql-http is the official, spec-compliant replacement for express-graphql
+// It does NOT include GraphiQL by design. If you need the IDE, add a separate route.
 app.all("/graphql", createHandler({
     schema: schema,
     rootValue: root,
@@ -153,6 +157,7 @@ app.all("/graphql", createHandler({
 app.get("/", async (req, res) => {
     try {
         const Blog = require("./models/Blog");
+        // Safe fallback to req.query if queryParams is not available
         const queryParams = req.queryParams || req.query || {};
         const { search = '', sort = 'newest', page = 1, limit = 9 } = queryParams;
 
@@ -207,12 +212,12 @@ app.get("/", async (req, res) => {
             sort
         });
     } catch (error) {
-        console.error("🚨 Home Route Error:", error.message);
+        console.error("ðŸš¨ Home Route Error:", error.message);
         res.status(500).send("Internal Server Error");
     }
 });
 
-// ====================== ALL ROUTES ======================
+// ====================== ROUTES ======================
 app.use("/admin", AdminRoute);
 app.use("/user/profile", ProfileRoute);
 app.use("/user", UserRoute);
@@ -222,8 +227,6 @@ app.use("/comments", CommentRoute);
 app.use("/follow", FollowRoute);
 app.use("/notifications", NotificationRoute);
 app.use("/analytics", AnalyticsRoute);
-
-// New Feature Routes
 app.use("/badges", BadgeRoute);
 app.use("/bookmarks", BookmarkRoute);
 app.use("/share", ShareRoute);
@@ -235,13 +238,12 @@ app.use((req, res) => {
 
 // ====================== ERROR HANDLER ======================
 app.use((err, req, res, next) => {
-    console.error("🚨 Server Error:", err);
+    console.error("ðŸš¨ Server Error:", err);
     res.status(500).send("Internal Server Error");
 });
 
 app.listen(PORT, () => {
-    console.log(`✅ Server running on port ${PORT}`);
-    console.log(`🌐 Visit http://localhost:${PORT}`);
+    console.log(`âœ… Server running on port ${PORT}`);
+    console.log(`ðŸŒ Visit http://localhost:${PORT}`);
 });
-
 module.exports = app;
