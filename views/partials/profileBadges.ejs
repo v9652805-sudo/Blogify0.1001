@@ -1,0 +1,84 @@
+<!-- Profile Tab - Add Badges Tab to views/profile.ejs -->
+
+<% if (isOwnProfile) { %>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="badges-tab" data-bs-toggle="tab" 
+                data-bs-target="#badges" type="button" role="tab" aria-selected="false">
+            <i class="fas fa-trophy"></i> Achievements
+        </button>
+    </li>
+<% } %>
+
+<!-- Add this section after other tab content -->
+<div class="tab-pane fade" id="badges" role="tabpanel" aria-labelledby="badges-tab">
+    <div class="row">
+        <!-- Badges -->
+        <div class="col-12">
+            <h5 class="fw-bold mb-3">
+                <i class="fas fa-trophy text-warning"></i> Badges & Achievements
+            </h5>
+            
+            <div id="profileBadgesContainer" class="row g-3">
+                <div class="col-12 text-center py-5">
+                    <p class="text-muted">Loading badges...</p>
+                </div>
+            </div>
+
+            <div class="mt-4 text-center">
+                <a href="/badges" class="btn btn-primary btn-sm">
+                    <i class="fas fa-arrow-right"></i> View All Achievements
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Load user badges in profile
+async function loadProfileBadges() {
+    try {
+        const res = await axios.get(`/badges/user/<%= user._id %>`);
+        const badges = res.data.badges;
+
+        if (badges.length === 0) {
+            document.getElementById('profileBadgesContainer').innerHTML = `
+                <div class="col-12 text-center py-5">
+                    <p class="text-muted">No badges earned yet. Start contributing!</p>
+                </div>
+            `;
+            return;
+        }
+
+        const html = badges.slice(0, 6).map(b => `
+            <div class="col-md-4 col-lg-3 text-center">
+                <div class="p-3 bg-light rounded-3">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">${b.badge.icon}</div>
+                    <h6 class="fw-bold mb-1">${b.badge.title}</h6>
+                    <small class="text-muted d-block">${b.badge.description}</small>
+                    <small class="badge bg-${b.badge.tier} mt-2">
+                        ${b.badge.tier.toUpperCase()}
+                    </small>
+                </div>
+            </div>
+        `).join('');
+
+        document.getElementById('profileBadgesContainer').innerHTML = `
+            <div class="col-12">
+                <div class="row g-3">
+                    ${html}
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Failed to load profile badges:', error);
+    }
+}
+
+// Load badges when badges tab is clicked
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('badges-tab')) {
+        document.getElementById('badges-tab').addEventListener('click', loadProfileBadges);
+    }
+});
+</script>
+
