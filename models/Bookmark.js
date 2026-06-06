@@ -53,20 +53,13 @@ const BookmarkSchema = new Schema({
     
 }, { timestamps: true });
 
-// Indexes for faster queries
+// ====================== INDEXES ======================
 BookmarkSchema.index({ user: 1, blog: 1 }, { unique: true });
 BookmarkSchema.index({ user: 1, createdAt: -1 });
 BookmarkSchema.index({ user: 1, collection: 1 });
-BookmarkSchema.index({ user: 1, readingProgress.isRead: 1 });
 
-// Virtual for formatted created date
-BookmarkSchema.virtual("formattedDate").get(function() {
-    return new Date(this.createdAt).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
-});
+// ✅ FIXED: Use string notation for nested fields in compound indexes
+BookmarkSchema.index({ user: 1, "readingProgress.isRead": 1 });
 
 const Bookmark = mongoose.models.Bookmark || model("Bookmark", BookmarkSchema);
 module.exports = Bookmark;
