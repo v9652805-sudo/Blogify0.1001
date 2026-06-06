@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include("./partials/head") %>
+    <title>My Achievements & Badges | Blogify</title>
+    <style>
+        .badges-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem 0;
+        }
+
+        .badge-card {
+            text-align: center;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .badge-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border-color: #6366f1;
+        }
+
+        .badge-card.earned {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(79, 70, 229, 0.1));
+        }
+
+        .badge-card.locked {
+            opacity: 0.6;
+            background: #f8f9fa;
+        }
+
+        .badge-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .badge-name {
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            color: #1e293b;
+        }
+
+        .badge-description {
+            font-size: 0.75rem;
+            color: #64748b;
+            line-height: 1.3;
+        }
+
+        .badge-tier {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tier-bronze { background: #CD7F32; color: white; }
+        .tier-silver { background: #C0C0C0; color: white; }
+        .tier-gold { background: #FFD700; color: #333; }
+        .tier-platinum { background: #E5E4E2; color: #333; }
+
+        .badge-earned-date {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            margin-top: 0.5rem;
+        }
+
+        .lock-icon {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #e11d48;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 8px rgba(225, 29, 72, 0.3);
+        }
+
+        .progress-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .progress-item {
+            margin-bottom: 1.5rem;
+        }
+
+        .progress-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .progress-bar-custom {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #4f46e5);
+            transition: width 0.3s ease;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .tabs-custom {
+            display: flex;
+            gap: 1rem;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 2rem;
+        }
+
+        .tabs-custom button {
+            background: none;
+            border: none;
+            padding: 1rem;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tabs-custom button.active {
+            color: #6366f1;
+            border-bottom-color: #6366f1;
+        }
+
+        .tabs-custom button:hover {
+            color: #475569;
+        }
+
+        .badge-modal {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .badge-modal .badge-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+        }
+
+        .achievement-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .achievement-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .achievement-item i {
+            font-size: 1.5rem;
+            color: #6366f1;
+            margin-right: 1rem;
+            min-width: 30px;
+        }
+
+        .achievement-info {
+            text-align: left;
+        }
+
+        .achievement-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .achievement-description {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        @media (max-width: 768px) {
+            .badges-container {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .tabs-custom {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include("./partials/nave") %>
+
+    <div class="container my-5">
+        <!-- Header -->
+        <div class="mb-5">
+            <h1 class="fw-bold mb-2">
+                <i class="fas fa-trophy text-warning"></i> Your Achievements
+            </h1>
+            <p class="text-muted">Earn badges by contributing to the Blogify community</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalBadges">0</div>
+                <div class="stat-label">Badges Earned</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalBlogs">0</div>
+                <div class="stat-label">Blogs Published</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalViews">0</div>
+                <div class="stat-label">Total Views</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalFollowers">0</div>
+                <div class="stat-label">Followers</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs-custom">
+            <button class="active" onclick="switchTab('earned')">
+                <i class="fas fa-star"></i> Earned Badges
+            </button>
+            <button onclick="switchTab('locked')">
+                <i class="fas fa-lock"></i> Locked Badges
+            </button>
+            <button onclick="switchTab('progress')">
+                <i class="fas fa-chart-line"></i> Progress
+            </button>
+        </div>
+
+        <!-- Earned Badges Tab -->
+        <div id="earned-tab">
+            <div class="badges-container" id="earnedBadgesContainer">
+                <div class="text-center py-5 w-100">
+                    <p class="text-muted">Loading your badges...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Locked Badges Tab -->
+        <div id="locked-tab" style="display: none;">
+            <div class="badges-container" id="lockedBadgesContainer">
+                <div class="text-center py-5 w-100">
+                    <p class="text-muted">Loading badges...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Tab -->
+        <div id="progress-tab" style="display: none;">
+            <div class="progress-section">
+                <h5 class="fw-bold mb-4">Progress Towards Badges</h5>
+                <div id="progressContainer">
+                    <div class="text-center py-5">
+                        <p class="text-muted">Loading progress...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Badge Detail Modal -->
+    <div class="modal fade" id="badgeModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-body p-4">
+                    <div class="badge-modal">
+                        <div class="badge-icon" id="modalBadgeIcon">🏆</div>
+                        <h3 class="fw-bold mb-2" id="modalBadgeTitle">Badge Title</h3>
+                        <p class="text-muted mb-3" id="modalBadgeDescription">Badge Description</p>
+                        <div id="modalBadgeTier" class="badge-tier tier-bronze">Bronze</div>
+                        <p class="text-muted small mt-3" id="modalBadgeRequirements">Requirements information</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include("./partials/scripts") %>
+
+    <script>
+        let userBadges = [];
+        let allBadges = [];
+        let badgeProgress = {};
+        let currentTab = 'earned';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadBadges();
+            loadProgress();
+        });
+
+        async function loadBadges() {
+            try {
+                const res = await axios.get('/badges/my');
+                userBadges = res.data.badges.map(b => b.badge._id);
+                renderBadges();
+                
+                const allRes = await axios.get('/badges');
+                allBadges = allRes.data.badges;
+                renderBadges();
+                
+                document.getElementById('totalBadges').textContent = userBadges.length;
+            } catch (error) {
+                console.error('Failed to load badges:', error);
+            }
+        }
+
+        async function loadProgress() {
+            try {
+                const res = await axios.get('/badges/progress/my');
+                badgeProgress = res.data.progress;
+                
+                document.getElementById('totalBlogs').textContent = badgeProgress.blogs;
+                document.getElementById('totalViews').textContent = badgeProgress.views.toLocaleString();
+                document.getElementById('totalFollowers').textContent = badgeProgress.followers;
+                
+                renderProgress();
+            } catch (error) {
+                console.error('Failed to load progress:', error);
+            }
+        }
+
+        function renderBadges() {
+            if (allBadges.length === 0) return;
+
+            const earnedHtml = allBadges.filter(b => userBadges.includes(b._id)).map(badge => `
+                <div class="badge-card earned" onclick="showBadgeDetail('${badge._id}', '${badge.name}')">
+                    <span class="badge-icon">${badge.icon}</span>
+                    <div class="badge-name">${badge.title}</div>
+                    <div class="badge-description">${badge.description}</div>
+                    <span class="badge-tier tier-${badge.tier}">${badge.tier}</span>
+                </div>
+            `).join('');
+
+            const lockedHtml = allBadges.filter(b => !userBadges.includes(b._id)).map(badge => `
+                <div class="badge-card locked" onclick="showBadgeDetail('${badge._id}', '${badge.name}')">
+                    <div class="lock-icon"><i class="fas fa-lock"></i></div>
+                    <span class="badge-icon" style="opacity: 0.5;">🔒</span>
+                    <div class="badge-name">${badge.title}</div>
+                    <div class="badge-description">${badge.description}</div>
+                    <span class="badge-tier tier-${badge.tier}">${badge.tier}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('earnedBadgesContainer').innerHTML = earnedHtml || '<p class="text-muted w-100 text-center py-5">No badges earned yet. Start contributing!</p>';
+            document.getElementById('lockedBadgesContainer').innerHTML = lockedHtml || '<p class="text-muted w-100 text-center py-5">All badges unlocked!</p>';
+        }
+
+        function renderProgress() {
+            const progressHtml = `
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span>📝 Blog Posts</span>
+                        <span>${badgeProgress.blogs}/100</span>
+                    </div>
+                    <div class="progress-bar-custom">
+                        <div class="progress-bar-fill" style="width: ${Math.min((badgeProgress.blogs / 100) * 100, 100)}%"></div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span>👁️ Total Views</span>
+                        <span>${badgeProgress.views.toLocaleString()}/100000</span>
+                    </div>
+                    <div class="progress-bar-custom">
+                        <div class="progress-bar-fill" style="width: ${Math.min((badgeProgress.views / 100000) * 100, 100)}%"></div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span>👥 Followers</span>
+                        <span>${badgeProgress.followers}/1000</span>
+                    </div>
+                    <div class="progress-bar-custom">
+                        <div class="progress-bar-fill" style="width: ${Math.min((badgeProgress.followers / 1000) * 100, 100)}%"></div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span>❤️ Likes</span>
+                        <span>${badgeProgress.likes}/1000</span>
+                    </div>
+                    <div class="progress-bar-custom">
+                        <div class="progress-bar-fill" style="width: ${Math.min((badgeProgress.likes / 1000) * 100, 100)}%"></div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span>💬 Comments</span>
+                        <span>${badgeProgress.comments}/500</span>
+                    </div>
+                    <div class="progress-bar-custom">
+                        <div class="progress-bar-fill" style="width: ${Math.min((badgeProgress.comments / 500) * 100, 100)}%"></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('progressContainer').innerHTML = progressHtml;
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('[id*="-tab"]').forEach(el => el.style.display = 'none');
+            document.getElementById(tab + '-tab').style.display = 'block';
+            
+            document.querySelectorAll('.tabs-custom button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function showBadgeDetail(badgeId, badgeName) {
+            const badge = allBadges.find(b => b._id === badgeId);
+            if (!badge) return;
+
+            document.getElementById('modalBadgeIcon').textContent = badge.icon;
+            document.getElementById('modalBadgeTitle').textContent = badge.title;
+            document.getElementById('modalBadgeDescription').textContent = badge.description;
+            document.getElementById('modalBadgeTier').textContent = badge.tier.toUpperCase();
+            document.getElementById('modalBadgeTier').className = `badge-tier tier-${badge.tier}`;
+
+            const modal = new bootstrap.Modal(document.getElementById('badgeModal'));
+            modal.show();
+        }
+    </script>
+</body>
+</html>
