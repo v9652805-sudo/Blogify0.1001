@@ -115,7 +115,6 @@ class ShareAnalyticsService {
                 return acc;
             }, { views: 0, likes: 0, comments: 0, shares: 0 });
 
-            // Get top performers (users who shared most)
             const topPerformers = await BlogShare.find({ blog: blogId })
                 .populate("sharedBy", "fullName profileImageURL")
                 .sort({ clickCount: -1 })
@@ -199,7 +198,7 @@ class ShareAnalyticsService {
                     $group: {
                         _id: "$blog",
                         totalShares: { $sum: 1 },
-                        totalClicks: { $sum: "$clickCount",
+                        totalClicks: { $sum: "$clickCount" },
                         avgRating: { $avg: "$conversions.likes" }
                     }
                 },
@@ -266,4 +265,3 @@ class ShareAnalyticsService {
 }
 
 module.exports = ShareAnalyticsService;
-
