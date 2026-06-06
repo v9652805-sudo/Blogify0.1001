@@ -1,0 +1,245 @@
+<!-- Share Analytics Dashboard - For blog authors -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include("./partials/head") %>
+    <title>Share Analytics - <%= blog.title %> | Blogify</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        .analytics-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .platform-chip {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: #f1f5f9;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <%- include("./partials/nave") %>
+
+    <div class="container my-5">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h2 class="fw-bold mb-0">
+                <i class="fas fa-chart-line text-primary"></i> Share Analytics
+            </h2>
+            <a href="/blogs/<%= blog._id %>" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Back to Blog
+            </a>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <div class="stat-value" id="totalShares">0</div>
+                    <div class="stat-label">Total Shares</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <div class="stat-value" id="totalClicks">0</div>
+                    <div class="stat-label">Clicks</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <div class="stat-value" id="totalViews">0</div>
+                    <div class="stat-label">Views from Shares</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <div class="stat-value" id="engagementRate">0%</div>
+                    <div class="stat-label">Engagement</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Platforms -->
+        <div class="analytics-card">
+            <h5 class="fw-bold mb-3">Platform Breakdown</h5>
+            <div id="platformsContainer">
+                <p class="text-muted">Loading platforms...</p>
+            </div>
+        </div>
+
+        <!-- Performance Chart -->
+        <div class="analytics-card">
+            <h5 class="fw-bold mb-3">Performance Over Time (Last 30 Days)</h5>
+            <div class="chart-container">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Top Performers -->
+        <div class="analytics-card">
+            <h5 class="fw-bold mb-3">Top Sharers</h5>
+            <div id="topSharersContainer">
+                <p class="text-muted">Loading top sharers...</p>
+            </div>
+        </div>
+    </div>
+
+    <%- include("./partials/scripts") %>
+
+    <script>
+        const blogId = '<%= blog._id %>';
+        let performanceChart;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadShareAnalytics();
+        });
+
+        async function loadShareAnalytics() {
+            try {
+                const res = await axios.get(`/share/blog/${blogId}/stats`);
+                const stats = res.data.stats;
+
+                // Update stats
+                document.getElementById('totalShares').textContent = stats.totalShares;
+                document.getElementById('totalClicks').textContent = stats.totalClicks;
+                document.getElementById('totalViews').textContent = stats.conversions.views;
+                
+                const engagement = stats.totalShares > 0 ? 
+                    Math.round((stats.totalClicks / stats.totalShares) * 100) : 0;
+                document.getElementById('engagementRate').textContent = engagement + '%';
+
+                // Render platforms
+                renderPlatforms(stats.platforms);
+
+                // Render top sharers
+                renderTopSharers(stats.topPerformers);
+
+                // Load performance chart
+                loadPerformanceChart();
+            } catch (error) {
+                notify.error('Failed to load share analytics');
+            }
+        }
+
+        function renderPlatforms(platforms) {
+            let html = '';
+            for (const [platform, data] of Object.entries(platforms)) {
+                html += `
+                    <div class="platform-chip">
+                        <i class="fab fa-${platform}"></i> 
+                        ${platform}: ${data.count} shares, ${data.clicks} clicks
+                    </div>
+                `;
+            }
+            document.getElementById('platformsContainer').innerHTML = html || '<p class="text-muted">No shares yet</p>';
+        }
+
+        function renderTopSharers(topSharers) {
+            if (!topSharers || topSharers.length === 0) {
+                document.getElementById('topSharersContainer').innerHTML = '<p class="text-muted">No data yet</p>';
+                return;
+            }
+
+            const html = topSharers.map((share, index) => `
+                <div class="d-flex align-items-center justify-content-between p-2 border-bottom">
+                    <div>
+                        <strong>#${index + 1}</strong>
+                        <img src="${share.sharedBy.profileImageURL}" width="24" height="24" class="rounded-circle mx-2">
+                        <strong>${share.sharedBy.fullName}</strong>
+                    </div>
+                    <div>
+                        <span class="badge bg-primary">${share.clickCount} clicks</span>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('topSharersContainer').innerHTML = html;
+        }
+
+        async function loadPerformanceChart() {
+            try {
+                const res = await axios.get(`/share/blog/${blogId}/performance?days=30`);
+                const performance = res.data.performance;
+
+                const dates = Object.keys(performance).sort();
+                const clicks = dates.map(date => performance[date].clicks);
+                const shares = dates.map(date => performance[date].shares);
+
+                const ctx = document.getElementById('performanceChart').getContext('2d');
+                performanceChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: dates,
+                        datasets: [
+                            {
+                                label: 'Clicks',
+                                data: clicks,
+                                borderColor: '#6366f1',
+                                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                                tension: 0.3
+                            },
+                            {
+                                label: 'Shares',
+                                data: shares,
+                                borderColor: '#4f46e5',
+                                backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                                tension: 0.3
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to load performance chart:', error);
+            }
+        }
+    </script>
+</body>
+</html>
