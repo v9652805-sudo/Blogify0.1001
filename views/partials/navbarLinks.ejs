@@ -1,0 +1,36 @@
+<!-- Update views/partials/nave.ejs - Add these links to navbar -->
+
+<!-- Add to navbar under main nav items (after "Write" link) -->
+<li class="nav-item">
+    <a class="nav-link fw-medium" href="/bookmarks" title="My Reading List">
+        <i class="fas fa-bookmark"></i> <span class="d-none d-lg-inline ms-2">Bookmarks</span>
+    </a>
+</li>
+
+<li class="nav-item">
+    <a class="nav-link fw-medium" href="/badges" title="My Achievements">
+        <i class="fas fa-trophy"></i> <span class="d-none d-lg-inline ms-2">Achievements</span>
+    </a>
+</li>
+
+<!-- Add share stats indicator in navbar (if user is author) -->
+<script>
+// Add this to check if user has any shared blogs
+document.addEventListener('DOMContentLoaded', () => {
+    // This will be loaded dynamically based on user activity
+    updateNavbarBadges();
+});
+
+async function updateNavbarBadges() {
+    try {
+        // Update bookmark count if user is logged in
+        const res = await axios.get('/bookmarks?page=1&limit=1');
+        if (res.data.total > 0) {
+            console.log('User has ' + res.data.total + ' bookmarks');
+        }
+    } catch (error) {
+        // User not logged in or error
+    }
+}
+</script>
+
